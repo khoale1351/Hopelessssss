@@ -12,6 +12,28 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">TravelAll</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li><a href="/">Home</a></li>
+                        
+                    <li><a href="/Tour/Book">Book a Tour</a></li>
+
+                    <li><a href="/Forum">Forum</a></li>
+
+                    <li><a href="/Admin/Index">Quản lí</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li><a href="/Account/Login">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <header>
         <div class="slider">
             <div><img src="~/images/slide1.jpg" alt="Slide 1"></div>
@@ -38,18 +60,6 @@
                 </li>
             </ul>
         </aside>
-        <div class="logo">Travel Website</div>
-        <nav>
-            <ul class="nav-left">
-                <li><a href="/">Home</a></li>
-                <li><a href="/Tour/Book">Book a Tour</a></li>
-                <li><a href="/Forum">Forum</a></li>
-                <li><a href="/Admin/Index">Quản lí</a></li>
-            </ul>
-            <ul class="nav-right">
-                <li><a href="/Account/Login">Login</a></li>
-            </ul>
-        </nav>
     </header>
 
     <main>

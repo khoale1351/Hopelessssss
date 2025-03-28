@@ -45,6 +45,19 @@ nav {
     right: 20px;
     z-index: 1000;
 }
+.navbar-brand {
+    font-family: 'Poppins', Georgia, 'Times New Roman', Times, serif; /* Hoặc font khác bạn chọn */
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: blanchedalmond !important;
+    margin-right: auto; /* Để đẩy brand sang bên trái */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+    .navbar-brand:hover {
+        color: var(--primary-color);
+    }
 
     nav ul {
         list-style: none;

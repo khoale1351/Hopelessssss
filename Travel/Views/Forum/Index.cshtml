@@ -1,0 +1,30 @@
+﻿@model List<Travel.Controllers.ForumController.Post>
+
+@{
+    ViewData["Title"] = "Forum";
+}
+
+<h2>Forum</h2>
+<div class="post-form">
+    <a href="/Forum/Create" class="btn-create-post">
+        <i class="fas fa-plus"></i> <!-- Icon dấu cộng -->
+        <span class="tooltip">Create New Post</span> <!-- Chữ hiển thị khi hover -->
+    </a>
+</div>
+
+<div class="posts">
+    @foreach (var post in Model)
+    {
+        <div class="post">
+            <h3>@post.Title</h3>
+            <p>@post.Content</p>
+            <div class="post-actions">
+                <form method="post" action="/Forum/Vote">
+                    <input type="hidden" name="postId" value="@post.Id">
+                    <button type="submit" name="action" value="like">▲ @post.Likes</button>
+                    <button type="submit" name="action" value="dislike">▼ @post.Dislikes</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

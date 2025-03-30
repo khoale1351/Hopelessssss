@@ -1,14 +1,29 @@
-﻿@{
-    ViewData["Title"] = "Login";
+﻿@model Travel.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Đăng Nhập";
 }
 
-<h2>Login</h2>
-<form method="post" action="/Account/Login">
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
+<h2>@ViewData["Title"]</h2>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+<form asp-action="Login" method="post">
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
 
-    <button type="submit">Login</button>
+    <div class="form-group">
+        <label asp-for="Password">Mật khẩu</label>
+        <input asp-for="Password" type="password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group form-check">
+        <input asp-for="RememberMe" class="form-check-input" />
+        <label asp-for="RememberMe" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Đăng Nhập</button>
+    <a asp-action="ForgotPassword">Quên mật khẩu?</a>
 </form>

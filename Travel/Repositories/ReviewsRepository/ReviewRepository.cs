@@ -10,11 +10,17 @@ namespace Travel.Repositories.ReviewsRepository
         public ReviewRepository(TourismDbContext context) : base(context)
         {
         }
+
         public async Task<IEnumerable<Review>> GetReviewsByTourIdAsync(int tourId)
         {
             return await _context.Reviews
                 .Include(r => r.User)
                 .Where(r => r.TourId == tourId).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Review>> GetReviewsByUserIdAsync(string userId)
+        {
+            return await _context.Reviews.Where(r => r.UserId == userId).ToListAsync();
         }
     }
 }

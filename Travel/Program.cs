@@ -44,6 +44,13 @@ namespace Travel
             .AddEntityFrameworkStores<TourismDbContext>()
             .AddDefaultTokenProviders();
 
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.MaxFailedAccessAttempts = 5; // 5 lần sai sẽ bị khóa
+                options.Lockout.AllowedForNewUsers = true;
+            });
+
             //Entity Services
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();

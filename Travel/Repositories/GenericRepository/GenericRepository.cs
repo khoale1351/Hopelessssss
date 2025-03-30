@@ -34,13 +34,12 @@ namespace Travel.Repositories.PublicRepository
             _dbSet.Update(entity);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await GetByIdAsync(id);
-            if (entity != null)
-            {
-                _dbSet.Remove(entity);
-            }
+            if (entity == null) return false;
+            _dbSet.Remove(entity);
+            return true;
         }
     }
 }

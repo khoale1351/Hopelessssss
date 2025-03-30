@@ -1,0 +1,464 @@
+﻿/* Định nghĩa biến màu sắc */
+:root {
+    --primary-color: #007bff;
+    --primary-hover: #0056b3;
+    --secondary-color: #333;
+    --text-color: #555;
+    --bg-light: #f8f9fa;
+    --bg-dark: #333;
+    --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Reset CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    color: var(--text-color);
+}
+
+/* Header */
+header {
+    position: relative;
+    color: white;
+}
+
+    header .logo {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        z-index: 1000;
+    }
+
+nav {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.navbar-brand {
+    font-family: 'Poppins', Georgia, 'Times New Roman', Times, serif; /* Hoặc font khác bạn chọn */
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: blanchedalmond !important;
+    margin-right: auto; /* Để đẩy brand sang bên trái */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+    .navbar-brand:hover {
+        color: var(--primary-color);
+    }
+
+    nav ul {
+        list-style: none;
+        display: flex;
+        gap: 1.5rem;
+        margin: 0;
+        padding: 0;
+    }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+            nav ul li a:hover {
+                color: var(--primary-color);
+            }
+
+/* Slider */
+.slider {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    position: relative;
+}
+
+    .slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Sidebar */
+    /* Slider Styles */
+    .slider img {
+        width: 100%;
+        height: auto;
+    }
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333; /* Thay thế var(--bg-dark) bằng màu thực */
+    padding: 0.5rem; /* Điều chỉnh padding */
+    border-radius: 20px; /* Bo tròn góc nhiều hơn */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Thay var(--shadow-light) bằng giá trị thực */
+    z-index: 1000;
+    width: 60px; /* Đặt kích thước phù hợp với icon */
+    height: auto; /* Chiều cao tự động theo nội dung */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Căn giữa icon theo chiều dọc */
+}
+
+    .sidebar .social-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem; /* Tăng khoảng cách giữa các icon */
+    }
+
+        .sidebar .social-links a {
+            color: white;
+            font-size: 1.5rem; /* Tăng hoặc giảm kích thước icon nếu cần */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+            .sidebar .social-links a:hover {
+                color: #007bff; /* Thay var(--primary-color) bằng giá trị thực */
+            }
+
+/* Hero Section */
+.hero {
+    background-image: url('../images/hero_bg.jpg');
+    background-size: cover; /* Ensure the image covers the entire section */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    height: 50vh; /* Set the section height to full viewport height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; /* Set text color to white */
+}
+
+
+    .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+/* Card Styling */
+.card {
+    border-radius: 12px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+/* Form Styling */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+/* Button Styling */
+.btn-primary {
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    border-radius: 8px;
+    transition: 0.3s ease-in-out;
+    font-weight: bold;
+}
+
+    .btn-primary:hover {
+        background: linear-gradient(to right, #0056b3, #008cff);
+        transform: scale(1.05);
+    }
+
+/* Tab Navigation */
+.nav-tabs .nav-link {
+    color: #007bff;
+    font-weight: bold;
+}
+
+    .nav-tabs .nav-link.active {
+        background-color: #007bff;
+        color: white;
+        border-radius: 8px 8px 0 0;
+    }
+
+/* Featured Tours */
+.featured-tours {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+    .featured-tours h2 {
+        font-size: 2.2rem;
+        font-weight: bold;
+    }
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .btn:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+    }
+
+/* Form Styles */
+form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: var(--shadow-light);
+}
+
+    form label {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    form input,
+    form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    form button {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background-color: var(--secondary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        form button:hover {
+            background-color: #555;
+        }
+
+/* Forum Styles */
+.post {
+    background-color: white;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    box-shadow: var(--shadow-light);
+}
+
+    .post h3 {
+        margin-bottom: 0.5rem;
+    }
+
+    .post p {
+        margin-bottom: 1rem;
+    }
+
+    .post img {
+        max-width: 100%;
+        border-radius: 5px;
+    }
+
+/* Post Actions */
+.post-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+    .post-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+        .post-actions button:hover {
+            color: var(--secondary-color);
+        }
+
+/* Tour Styles */
+.featured-tours {
+    padding: 2rem;
+    text-align: center;
+}
+
+.tour-list {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.tour-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    width: 300px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .tour-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .tour-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+.tour-info {
+    padding: 1rem;
+    text-align: left;
+}
+
+    .tour-info h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .tour-info .tour-description {
+        font-size: 1rem;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+
+    .tour-info .tour-price {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #e67e22;
+        margin-bottom: 1rem;
+    }
+
+    .tour-info .btn-book {
+        @extend .btn;
+    }
+
+/* Footer */
+footer {
+    background-color: var(--bg-dark);
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    margin-top: 2rem;
+}
+
+/* Tiêu đề */
+h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Giữ nguyên các đoạn code cũ ở đây */
+
+/* Thêm các điều chỉnh mới cho form */
+.container {
+    width: 100%; /* Kéo rộng khung chứa ra hết chiều ngang */
+    padding: 20px; /* Tạo khoảng trống xung quanh */
+    box-sizing: border-box; /* Bao gồm padding trong kích thước khung */
+}
+
+.form-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Tạo khoảng cách giữa các input */
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+
+.form-field {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Khoảng cách giữa label và input */
+    margin-bottom: 0; /* Xóa khoảng cách dưới nếu có */
+}
+
+    .form-field label {
+        width: auto; /* Để label co giãn theo nội dung */
+        font-weight: bold;
+    }
+
+    .form-field input,
+    .form-field select {
+        width: auto; /* Giúp các input vừa với nội dung */
+        min-width: 150px; /* Đảm bảo không quá nhỏ */
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Nếu bạn đang sử dụng Bootstrap, thêm một số class phụ trợ */
+@media (min-width: 768px) {
+    .form-field {
+        flex-direction: row;
+    }
+}
+
+/* Style cho phần bản đồ để responsive */
+.map-responsive {
+    overflow: hidden;
+    padding-bottom: 46.25%; /* Tỷ lệ 16:9 */
+    position: relative;
+    height: 0;
+}
+
+    .map-responsive iframe {
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+    }

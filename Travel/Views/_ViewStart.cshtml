@@ -1,0 +1,17 @@
+﻿@{
+    if (User.Identity.IsAuthenticated)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+        }
+        else
+        {
+            Layout = "~/Views/Shared/_LayoutUser.cshtml"; // Mặc định cho User
+        }
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_LayoutUser.cshtml"; // Dành cho khách chưa đăng nhập
+    }
+}

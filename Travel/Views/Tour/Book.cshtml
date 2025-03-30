@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Book a Tour";
+}
+
+<h2>Book a Tour</h2>
+<form method="post" action="/Tour/Book" id="booking-form">
+    <label for="tour">Select Tour:</label>
+    <select id="tour" name="tour" required>
+        <option value="1">Tour Đà Lạt</option>
+        <option value="2">Tour Nha Trang</option>
+        <option value="3">Tour Hạ Long</option>
+    </select>
+
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="email">Your Email:</label>
+    <input type="email" id="email" name="email" required>
+    <span id="email-error" style="color: red; font-size: 0.9rem;"></span>
+
+    <label for="phone">Your Phone:</label>
+    <input type="text" id="phone" name="phone" required>
+    <span id="phone-error" style="color: red; font-size: 0.9rem;"></span>
+
+    <button type="submit">Book Now</button>
+</form>
+
+<div id="booking-summary" style="display: none;">
+    <div class="booking-card">
+        <img id="tour-image" src="" alt="Tour Image">
+        <div class="booking-info">
+            <h3 id="tour-name"></h3>
+            <p><strong>Name:</strong> <span id="summary-name"></span></p>
+            <p><strong>Email:</strong> <span id="summary-email"></span></p>
+            <p><strong>Phone:</strong> <span id="summary-phone"></span></p>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/Book_Script.js"></script>

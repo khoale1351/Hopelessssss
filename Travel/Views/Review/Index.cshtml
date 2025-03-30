@@ -1,0 +1,39 @@
+﻿@using Travel.Models
+@{
+    ViewData["Title"] = "Reviews";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Reviews</h2>
+    <a href="@Url.Action("Create", "Review")" class="btn btn-primary mb-3">Viết đánh giá</a>
+
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Tour</th>
+                <th>Xếp hạng</th>
+                <th>Bình luận</th>
+                <th>Ngày đánh giá</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var review in Model)
+            {
+                <tr>
+                    <td>@review.ReviewId</td>
+                    <td>@review.Tour.Name</td>
+                    <td>@review.Rating / 5</td>
+                    <td>@review.Comment</td>
+                    <td>@review.ReviewDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a href="@Url.Action("Details", "Review", new { id = review.ReviewId })" class="btn btn-info btn-sm">Chi tiết</a>
+                        <a href="@Url.Action("Edit", "Review", new { id = review.ReviewId })" class="btn btn-warning btn-sm">Chỉnh sửa</a>
+                        <a href="@Url.Action("Delete", "Review", new { id = review.ReviewId })" class="btn btn-danger btn-sm">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,4 +1,8 @@
-﻿using Travel.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Travel.Models;
 using Travel.Repositories.PublicRepository;
 
 namespace Travel.Repositories.ToursRepository
@@ -10,5 +14,7 @@ namespace Travel.Repositories.ToursRepository
         Task<IEnumerable<Tour>> GetOngoingToursAsync();
         Task<IEnumerable<Tour>> GetCompletedToursAsync();
         Task<IEnumerable<Tour>> GetCancelledToursAsync();
+        Task<int> CountAsync();
+        Task<IEnumerable<Tour>> GetAllAsync(Func<IQueryable<Tour>, IQueryable<Tour>> filter); // Sửa kiểu filter
     }
 }

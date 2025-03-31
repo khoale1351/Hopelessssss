@@ -15,7 +15,7 @@ namespace Travel.Repositories
         IDestinationRepository Destinations { get; }
         ITourRepository Tours { get; }
         IVoucherRepository Vouchers { get; }
-        IBookingRepostiory Bookings { get; }
+        IBookingRepository Bookings { get; }
         IPaymentRepository Payments { get; }
         IReviewRepository Reviews { get; }
         INotificationRepository Notifications { get; }

@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Travel.Data;
 using Travel.Models;
 using Travel.Repositories.PublicRepository;
@@ -9,11 +13,28 @@ namespace Travel.Repositories.Users
     public class UserRepository : GenericRepository<ApplicationUser>, IUserRepository
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly TourismDbContext _context;
 
         public UserRepository(TourismDbContext context, UserManager<ApplicationUser> userManager)
             : base(context)
         {
+            _context = context;
             _userManager = userManager;
+        }
+
+        public async Task<int> CountAsync()
+        {
+            return await _context.Users.CountAsync();
+        }
+
+        public async Task<IEnumerable<ApplicationUser>> GetAllAsync(Func<IQueryable<ApplicationUser>, IQueryable<ApplicationUser>> filter)
+        {
+            IQueryable<ApplicationUser> query = _context.Users;
+            if (filter != null)
+            {
+                query = filter(query);
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<ApplicationUser> GetUserByEmailAsync(string email)
@@ -32,7 +53,6 @@ namespace Travel.Repositories.Users
 
         public async Task<IEnumerable<ApplicationUser>> GetUsersByRoleAsync(string role)
         {
-            // Lấy toàn bộ người dùng và lọc ra những người thuộc role yêu cầu
             var allUsers = await _context.Users.ToListAsync();
             var usersInRole = new List<ApplicationUser>();
 

@@ -1,0 +1,208 @@
+﻿@model Travel.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Small Boxes (Stat Cards) -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@Model.TotalUsers</h3>
+                        <p>Người Dùng</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <a href="@Url.Action( "ManageUsers" ,"Admin")" class="small-box-footer">
+                        Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>@Model.TotalTours</h3>
+                        <p>Tour</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-plane"></i>
+                    </div>
+                    <a href="@Url.Action( "ManageTours", "Admin")" class="small-box-footer">
+                        Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@Model.TotalReviews</h3>
+                        <p>Review</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <a href="@Url.Action( "ManageReviews", "Admin") class="small-box-footer">
+                        Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@Model.TotalBookings</h3>
+                        <p>Booking</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <a href="@Url.Action( "ManageBookings", "Admin")" class="small-box-footer">
+                        Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Thống Kê Booking Theo Trạng Thái</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="bookingChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng Người dùng gần đây -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Người Dùng Gần Đây</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Tên</th>
+                                    <th>Email</th>
+                                    <th>Ngày Tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.RecentUsers)
+                                {
+                                    <tr>
+                                        <td>@user.FullName</td>
+                                        <td>@user.Email</td>
+                                        <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Tour và Review -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Tour Gần Đây</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên Tour</th>
+                                    <th>Điểm Đến</th>
+                                    <th>Giá</th>
+                                    <th>Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tour in Model.RecentTours)
+                                {
+                                    <tr>
+                                        <td>@tour.TourId</td>
+                                        <td>@tour.TourName</td>
+                                        <td>@tour.Destination?.Name</td>
+                                        <td>@tour.Price.ToString("C")</td>
+                                        <td>@tour.TourStatus</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Review Gần Đây</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tour</th>
+                                    <th>Người Dùng</th>
+                                    <th>Đánh Giá</th>
+                                    <th>Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var review in Model.RecentReviews)
+                                {
+                                    <tr>
+                                        <td>@review.ReviewId</td>
+                                        <td>@review.Tour?.TourName</td>
+                                        <td>@review.User?.FullName</td>
+                                        <td>@review.Rating / 5</td>
+                                        <td>@review.ReviewDate?.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Biểu đồ Booking theo trạng thái
+        var ctx = document.getElementById('bookingChart').getContext('2d');
+        var bookingChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Pending', 'Confirmed', 'Cancelled', 'Completed'],
+                datasets: [{
+                    label: 'Số Booking',
+                    data: [
+        @Model.RecentBookings.Count(b => b.Status == "Pending"),
+        @Model.RecentBookings.Count(b => b.Status == "Confirmed"),
+        @Model.RecentBookings.Count(b => b.Status == "Cancelled"),
+        @Model.RecentBookings.Count(b => b.Status == "Completed")
+                    ],
+                    backgroundColor: ['#f56954', '#00a65a', '#f39c12', '#00c0ef']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    </script>
+}

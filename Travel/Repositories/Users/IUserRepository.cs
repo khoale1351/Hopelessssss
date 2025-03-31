@@ -1,4 +1,8 @@
-﻿using Travel.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Travel.Models;
 using Travel.Repositories.PublicRepository;
 
 namespace Travel.Repositories.Users
@@ -11,5 +15,7 @@ namespace Travel.Repositories.Users
         Task<IEnumerable<ApplicationUser>> GetActiveUserAsync();
         Task<IEnumerable<ApplicationUser>> GetInactiveUsersAsync();
         Task<bool> UpdateUserStatusAsync(int userId, bool isActive);
+        Task<int> CountAsync();
+        Task<IEnumerable<ApplicationUser>> GetAllAsync(Func<IQueryable<ApplicationUser>, IQueryable<ApplicationUser>> filter);
     }
 }

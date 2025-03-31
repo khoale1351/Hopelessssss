@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Travel.Models;
 using Travel.Models.ViewModels;
 using Travel.Repositories;
+using Travel.ViewModels;
 
 namespace Travel.Controllers
 {
@@ -125,32 +126,45 @@ namespace Travel.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
+                try
                 {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    FullName = model.FullName,
-                    PhoneNumber = model.PhoneNumber,
-                    DateOfBirth = model.DateOfBirth,
-                    Address = model.Address,
-                    MembershipType = model.MembershipType,
-                    Status = model.Status,
-                    IsActive = model.IsActive,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    var user = new ApplicationUser
+                    {
+                        UserName = model.Email,
+                        Email = model.Email,
+                        FullName = model.FullName,
+                        PhoneNumber = model.PhoneNumber,
+                        DateOfBirth = model.DateOfBirth,
+                        Address = model.Address,
+                        MembershipType = model.MembershipType,
+                        Status = model.Status,
+                        IsActive = model.IsActive,
+                        CreatedAt = DateTime.UtcNow
+                    };
 
-                var result = await _userManager.CreateAsync(user, password);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, "Customer"); // Gán vai trò mặc định
-                    return RedirectToAction("ManageUsers");
+                    var result = await _userManager.CreateAsync(user, password);
+
+                    if (result.Succeeded)
+                    {
+                        // Gán role mặc định (ví dụ: "Customer")
+                        await _userManager.AddToRoleAsync(user, "Customer");
+
+                        TempData["SuccessMessage"] = "Thêm người dùng thành công!";
+                        return RedirectToAction("ManageUsers");
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
                 }
-
-                foreach (var error in result.Errors)
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError("", "Lỗi khi thêm người dùng: " + ex.Message);
                 }
             }
+
+            // Nếu có lỗi, hiển thị lại form với thông báo lỗi
             return View(model);
         }
 
@@ -271,6 +285,160 @@ namespace Travel.Controllers
             {
                 // Ghi log lỗi nếu cần
                 return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var viewModel = new TourViewModel
+            {
+                DestinationOptions = await _unitOfWork.Destinations.GetAllAsync()
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(TourViewModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var newTour = new Tour
+                    {
+                        TourName = model.TourName,
+                        Description = model.Description,
+                        Price = model.Price,
+                        Duration = model.Duration,
+                        StartDate = model.StartDate,
+                        EndDate = model.EndDate,
+                        AvailableSeats = model.AvailableSeats,
+                        TourType = model.TourType,
+                        TourStatus = model.TourStatus,
+                        DestinationId = model.DestinationId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.Tours.AddAsync(newTour);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Tour created successfully!";
+                    return RedirectToAction("Index");
+                }
+
+                // Nếu có lỗi validation, load lại danh sách điểm đến
+                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error creating tour: " + ex.Message);
+                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTourDetails(int id)
+        {
+            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+            if (tour == null) return NotFound();
+
+            // Load thông tin liên quan nếu cần
+            tour.Destination = await _unitOfWork.Destinations.GetByIdAsync(tour.DestinationId);
+
+            return PartialView("_TourDetailPartial", tour);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEditTourForm(int id)
+        {
+            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+            if (tour == null) return NotFound();
+
+            // Load danh sách điểm đến cho dropdown
+            ViewBag.Destinations = await _unitOfWork.Destinations.GetAllAsync();
+
+            return PartialView("_EditTourPartial", tour);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditTour(
+    int TourId,
+    string TourName,
+    int DestinationId,
+    string Description,
+    decimal Price,
+    int Duration,
+    DateTime StartDate,
+    DateTime EndDate,
+    int AvailableSeats,
+    string TourType,
+    string TourStatus,
+    IFormFile ImageFile)
+        {
+            try
+            {
+                var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
+                if (existingTour == null)
+                {
+                    return NotFound();
+                }
+
+                // Cập nhật thông tin
+                existingTour.TourName = TourName;
+                existingTour.DestinationId = DestinationId;
+                existingTour.Description = Description;
+                existingTour.Price = Price;
+                existingTour.Duration = Duration;
+                existingTour.StartDate = StartDate;
+                existingTour.EndDate = EndDate;
+                existingTour.AvailableSeats = AvailableSeats;
+                existingTour.TourType = TourType;
+                existingTour.TourStatus = TourStatus;
+
+                // Xử lý ảnh
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(stream);
+                    }
+
+                    existingTour.ImageUrl = "/uploads/" + fileName;
+                }
+
+                await _unitOfWork.Tours.UpdateAsync(existingTour);
+                await _unitOfWork.SaveChangesAsync();
+
+                return Json(new { redirect = Url.Action("ManageTours") });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Lỗi khi cập nhật tour: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTour(int id)
+        {
+            try
+            {
+                await _unitOfWork.Tours.DeleteAsync(id);
+                await _unitOfWork.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Xóa tour thành công!";
+                return RedirectToAction("ManageTours");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi xóa tour: " + ex.Message;
+                return RedirectToAction("ManageTours");
             }
         }
         // Quản lý đặt tour

@@ -4,7 +4,7 @@ using Travel.Data;
 using Travel.Models;
 using Travel.Repositories;
 using Travel.Repositories.BookingsRepository;
-using Travel.Repositories.Destinations;
+using Travel.Repositories.DestinationsRepository;
 using Travel.Repositories.NotificationsRepository;
 using Travel.Repositories.PaymentRepository;
 using Travel.Repositories.ReviewsRepository;

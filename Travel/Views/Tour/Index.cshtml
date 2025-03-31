@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Travel.ViewModels.TourViewModel>
+@{
+    ViewData["Title"] = "Danh sách Tour";
+}
+<h2 class="my-4">Danh sách Tour</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tên Tour</th>
+            <th>Điểm Đến</th>
+            <th>Giá</th>
+            <th>Ngày Bắt Đầu</th>
+            <th>Ngày Kết Thúc</th>
+            <th>Loại Tour</th>
+            <th>Trạng Thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tour in Model)
+        {
+            <tr>
+                <td>@tour.TourName</td>
+                <td>@tour.DestinationName</td>
+                <td>@tour.Price.ToString("C")</td>
+                <td>@tour.StartDate</td>
+                <td>@tour.EndDate</td>
+                <td>@tour.TourType</td>
+                <td>@tour.TourStatus</td>
+                <td>
+                    <a class="btn btn-info btn-sm" href="@Url.Action("Details", new { id = tour.TourId })">Xem</a>
+                    <a class="btn btn-warning btn-sm" href="@Url.Action("Edit", new { id = tour.TourId })">Sửa</a>
+                    <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", new { id = tour.TourId })">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a class="btn btn-success" href="@Url.Action("Create")">Thêm Tour</a>

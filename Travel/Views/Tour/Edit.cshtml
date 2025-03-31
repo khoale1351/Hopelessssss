@@ -1,0 +1,41 @@
+﻿@model Travel.Models.Tour
+@{
+    ViewData["Title"] = "Chỉnh sửa Tour";
+}
+
+<h2 class="my-4">Chỉnh sửa Tour: @Model.TourName</h2>
+
+<form asp-action="Edit" method="post" id="tourEditForm">
+    <input type="hidden" asp-for="TourId" />
+
+    <div class="mb-3">
+        <label class="form-label">Tên Tour</label>
+        <input asp-for="TourName" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Giá</label>
+        <input asp-for="Price" class="form-control" type="number" min="0" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Trạng Thái</label>
+        <select asp-for="TourStatus" class="form-select">
+            <option value="Upcoming">Upcoming</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#tourEditForm").validate();
+        });
+    </script>
+}

@@ -1,4 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using Travel.Data;
+using Travel.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -47,10 +51,12 @@ namespace Travel.Controllers
         {
             _unitOfWork = unitOfWork;
         }
+
         public IActionResult Management() // Đổi từ "Managerment" thành "Management"
         {
             return View("Management"); // Trả về Views/Admin/Admin.cshtml
         }
+
         public async Task<IActionResult> Index()
         {
             var totalUsers = await _unitOfWork.Users.GetAllAsync();

@@ -5,10 +5,6 @@
         {
             Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
         }
-        else if (User.IsInRole("Management"))
-        {
-            Layout = "~/Views/Shared/_LayoutManagement.cshtml";
-        }
         else
         {
             Layout = "~/Views/Shared/_LayoutUser.cshtml";

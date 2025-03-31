@@ -1,88 +1,99 @@
-﻿@{
+﻿@model IEnumerable<Travel.Models.Tour>
+
+@{
     ViewData["Title"] = "Quản lý Tour Du lịch";
+    Layout = "_LayoutAdmin";
 }
 
 <div class="container-fluid px-4">
     <h1 class="mt-4">@ViewData["Title"]</h1>
-    <div class="card mb-4">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="fas fa-table me-1"></i>
-                    Danh sách Tour
-                </div>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTourModal">
-                    <i class="fas fa-plus me-1"></i> Thêm Tour
-                </button>
-            </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-map-marked-alt me-1"></i>
+                Danh sách Tour
+            </div>
+            <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addTourModal">
+                <i class="fas fa-plus me-1"></i> Thêm Tour
+            </button>
+        </div>
+
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered" id="tourTable">
+                <table class="table table-striped table-hover table-bordered" id="toursTable">
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
+                            <th>Ảnh</th>
                             <th>Tên Tour</th>
-                            <th>Địa điểm</th>
-                            <th>Ngày khởi hành</th>
+                            <th>Điểm đến</th>
                             <th>Giá (VNĐ)</th>
+                            <th>Thời gian</th>
+                            <th>Ngày khởi hành</th>
                             <th>Số chỗ</th>
                             <th>Trạng thái</th>
+                            <th>Loại Tour</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Đà Lạt - Thành phố ngàn hoa</td>
-                            <td>Đà Lạt</td>
-                            <td>15/06/2023</td>
-                            <td>2,500,000</td>
-                            <td>20/30</td>
-                            <td><span class="badge bg-success">Còn chỗ</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editTourModal">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTourModal">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Nha Trang - Biển xanh cát trắng</td>
-                            <td>Nha Trang</td>
-                            <td>20/06/2023</td>
-                            <td>3,200,000</td>
-                            <td>15/25</td>
-                            <td><span class="badge bg-success">Còn chỗ</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editTourModal">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTourModal">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Hạ Long - Kỳ quan thiên nhiên</td>
-                            <td>Hạ Long</td>
-                            <td>25/06/2023</td>
-                            <td>3,800,000</td>
-                            <td>30/30</td>
-                            <td><span class="badge bg-danger">Hết chỗ</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editTourModal">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTourModal">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.TourId</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="Ảnh tour" style="width: 80px; height: 60px; object-fit: cover;" class="img-thumbnail" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không có ảnh</span>
+                                    }
+                                </td>
+                                <td>@item.TourName</td>
+                                <td>@item.Destination?.Name</td>
+                                <td>@item.Price.ToString("N0")</td>
+                                <td>@item.Duration ngày</td>
+                                <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+                                <td>@item.AvailableSeats</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(item.TourStatus)">
+                                        @GetStatusDisplay(item.TourStatus)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @GetTypeBadgeClass(item.TourType)">
+                                        @GetTypeDisplay(item.TourType)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-info me-1" title="Xem chi tiết" data-bs-toggle="modal"
+                                                data-bs-target="#detailTourModal" data-id="@item.TourId">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-warning me-1" title="Chỉnh sửa" data-bs-toggle="modal"
+                                                data-bs-target="#editTourModal" data-id="@item.TourId">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger delete-btn" title="Xóa"
+                                                data-id="@item.TourId" data-name="@item.TourName">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -91,163 +102,194 @@
 </div>
 
 <!-- Modal Thêm Tour -->
-<div class="modal fade" id="addTourModal" tabindex="-1" aria-labelledby="addTourModalLabel" aria-hidden="true">
+<div class="modal fade" id="addTourModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="addTourModalLabel">Thêm Tour Mới</h5>
+                <h5 class="modal-title">Thêm Tour Mới</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="tourName" class="form-label">Tên Tour</label>
-                            <input type="text" class="form-control" id="tourName" required>
+                            <label class="form-label">Tên Tour</label>
+                            <input type="text" class="form-control" name="TourName" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="tourLocation" class="form-label">Địa điểm</label>
-                            <input type="text" class="form-control" id="tourLocation" required>
+                            <label class="form-label">Điểm đến</label>
+                            
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="startDate" class="form-label">Ngày khởi hành</label>
-                            <input type="date" class="form-control" id="startDate" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="endDate" class="form-label">Ngày kết thúc</label>
-                            <input type="date" class="form-control" id="endDate" required>
+                        <div class="col-md-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" name="Description" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="tourPrice" class="form-label">Giá Tour (VNĐ)</label>
-                            <input type="number" class="form-control" id="tourPrice" required>
+                            <label class="form-label">Giá (VNĐ)</label>
+                            <input type="number" class="form-control" name="Price" min="0" required>
                         </div>
                         <div class="col-md-4">
-                            <label for="totalSlots" class="form-label">Tổng số chỗ</label>
-                            <input type="number" class="form-control" id="totalSlots" required>
+                            <label class="form-label">Thời gian (ngày)</label>
+                            <input type="number" class="form-control" name="Duration" min="1" required>
                         </div>
                         <div class="col-md-4">
-                            <label for="tourStatus" class="form-label">Trạng thái</label>
-                            <select class="form-select" id="tourStatus" required>
-                                <option value="1">Còn chỗ</option>
-                                <option value="0">Hết chỗ</option>
+                            <label class="form-label">Số chỗ</label>
+                            <input type="number" class="form-control" name="AvailableSeats" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày bắt đầu</label>
+                            <input type="date" class="form-control" name="StartDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày kết thúc</label>
+                            <input type="date" class="form-control" name="EndDate" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Loại Tour</label>
+                            <select class="form-select" name="TourType" required>
+                                <option value="Private">Tour riêng</option>
+                                <option value="Group">Tour nhóm</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="TourStatus" required>
+                                <option value="Upcoming">Sắp diễn ra</option>
+                                <option value="Ongoing">Đang diễn ra</option>
+                                <option value="Completed">Đã hoàn thành</option>
+                                <option value="Cancelled">Đã hủy</option>
                             </select>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="tourDescription" class="form-label">Mô tả Tour</label>
-                        <textarea class="form-control" id="tourDescription" rows="3"></textarea>
+                        <label class="form-label">Hình ảnh</label>
+                        <input class="form-control" type="file" name="ImageFile" accept="image/*">
                     </div>
-                    <div class="mb-3">
-                        <label for="tourImage" class="form-label">Hình ảnh Tour</label>
-                        <input class="form-control" type="file" id="tourImage">
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết Tour -->
+<div class="modal fade" id="detailTourModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Chi tiết Tour</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailTourContent">
+                <!-- Nội dung sẽ được load bằng AJAX -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary">Lưu Tour</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal Sửa Tour -->
-<div class="modal fade" id="editTourModal" tabindex="-1" aria-labelledby="editTourModalLabel" aria-hidden="true">
+<div class="modal fade" id="editTourModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title" id="editTourModalLabel">Chỉnh sửa Tour</h5>
+                <h5 class="modal-title">Chỉnh sửa Tour</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="editTourName" class="form-label">Tên Tour</label>
-                            <input type="text" class="form-control" id="editTourName" value="Đà Lạt - Thành phố ngàn hoa" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editTourLocation" class="form-label">Địa điểm</label>
-                            <input type="text" class="form-control" id="editTourLocation" value="Đà Lạt" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="editStartDate" class="form-label">Ngày khởi hành</label>
-                            <input type="date" class="form-control" id="editStartDate" value="2023-06-15" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editEndDate" class="form-label">Ngày kết thúc</label>
-                            <input type="date" class="form-control" id="editEndDate" value="2023-06-18" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="editTourPrice" class="form-label">Giá Tour (VNĐ)</label>
-                            <input type="number" class="form-control" id="editTourPrice" value="2500000" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="editTotalSlots" class="form-label">Tổng số chỗ</label>
-                            <input type="number" class="form-control" id="editTotalSlots" value="30" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="editTourStatus" class="form-label">Trạng thái</label>
-                            <select class="form-select" id="editTourStatus" required>
-                                <option value="1" selected>Còn chỗ</option>
-                                <option value="0">Hết chỗ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editTourDescription" class="form-label">Mô tả Tour</label>
-                        <textarea class="form-control" id="editTourDescription" rows="3">Khám phá thành phố ngàn hoa với đồi thông bạt ngàn, những vườn hoa rực rỡ và không khí trong lành.</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editTourImage" class="form-label">Hình ảnh Tour</label>
-                        <input class="form-control" type="file" id="editTourImage">
-                        <small class="text-muted">Để trống nếu không thay đổi ảnh</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-warning text-white">Cập nhật</button>
-            </div>
+            <form id="editTourForm" method="post" enctype="multipart/form-data">
+                <div class="modal-body" id="editTourContent">
+                    <!-- Nội dung sẽ được load bằng AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning text-white">Cập nhật</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Modal Xóa Tour -->
-<div class="modal fade" id="deleteTourModal" tabindex="-1" aria-labelledby="deleteTourModalLabel" aria-hidden="true">
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteTourModalLabel">Xác nhận xóa Tour</h5>
+                <h5 class="modal-title">Xác nhận xóa</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Bạn có chắc chắn muốn xóa tour <strong>"Đà Lạt - Thành phố ngàn hoa"</strong> không?</p>
-                <p class="text-danger">Hành động này không thể hoàn tác!</p>
+                <p>Bạn có chắc chắn muốn xóa tour <strong id="tourNameToDelete"></strong> không?</p>
+                <p class="text-danger">Tất cả booking và đánh giá liên quan sẽ bị xóa!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger">Xóa Tour</button>
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Upcoming" => "bg-info",
+            "Ongoing" => "bg-primary",
+            "Completed" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
 
-    <!-- Font Awesome -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    string GetStatusDisplay(string status)
+    {
+        return status switch
+        {
+            "Upcoming" => "Sắp diễn ra",
+            "Ongoing" => "Đang diễn ra",
+            "Completed" => "Đã hoàn thành",
+            "Cancelled" => "Đã hủy",
+            _ => status
+        };
+    }
 
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    string GetTypeBadgeClass(string type)
+    {
+        return type switch
+        {
+            "Private" => "bg-purple",
+            "Group" => "bg-indigo",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetTypeDisplay(string type)
+    {
+        return type switch
+        {
+            "Private" => "Tour riêng",
+            "Group" => "Tour nhóm",
+            _ => type
+        };
+    }
 }
+
+
+
+

@@ -1,0 +1,95 @@
+﻿@model Travel.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Thêm Người Dùng";
+    Layout = "_LayoutAdmin";
+}
+
+<!-- Main Content -->
+<div class="container my-5">
+    <h2 class="text-center mb-4">Thêm Người Dùng Mới</h2>
+
+    <!-- Form thêm người dùng -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-controller="Admin" asp-action="CreateUser" method="post" class="card p-4 shadow-lg">
+                <!-- FullName -->
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">Họ và tên</label>
+                    <input asp-for="FullName" class="form-control" required />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" required />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" required />
+                    <span class="text-danger">@(ViewData.ModelState["password"]?.Errors.FirstOrDefault()?.ErrorMessage)</span>
+                </div>
+
+                <!-- PhoneNumber -->
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control" type="tel" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <!-- DateOfBirth -->
+                <div class="mb-3">
+                    <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label">Địa chỉ</label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <!-- MembershipType -->
+                <div class="mb-3">
+                    <label asp-for="MembershipType" class="form-label">Loại thành viên</label>
+                    <select asp-for="MembershipType" class="form-control" required>
+                        <option value="Silver">Silver</option>
+                        <option value="Gold">Gold</option>
+                        <option value="Platinum">Platinum</option>
+                    </select>
+                    <span asp-validation-for="MembershipType" class="text-danger"></span>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-3">
+                    <label asp-for="Status" class="form-label">Trạng thái</label>
+                    <select asp-for="Status" class="form-control" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+
+                <!-- IsActive -->
+                <div class="mb-3 form-check">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsActive" class="form-check-label">Kích hoạt tài khoản</label>
+                    <span asp-validation-for="IsActive" class="text-danger"></span>
+                </div>
+
+                <!-- Nút Submit và Cancel -->
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Thêm Người Dùng</button>
+                    <a asp-controller="Admin" asp-action="ManageUsers" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

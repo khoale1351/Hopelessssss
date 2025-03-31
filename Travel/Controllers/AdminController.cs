@@ -115,10 +115,52 @@ namespace Travel.Controllers
             return View(users);
         }
 
+        public IActionResult CreateUser()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateUser(ApplicationUser model, string password)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    PhoneNumber = model.PhoneNumber,
+                    DateOfBirth = model.DateOfBirth,
+                    Address = model.Address,
+                    MembershipType = model.MembershipType,
+                    Status = model.Status,
+                    IsActive = model.IsActive,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await _userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Customer"); // Gán vai trò mặc định
+                    return RedirectToAction("ManageUsers");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            return View(model);
+        }
+
+
         public async Task<IActionResult> EditUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
             return View(user);
         }
 
@@ -128,12 +170,28 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null) return NotFound();
 
+            // Cập nhật tất cả các thuộc tính
             user.FullName = model.FullName;
             user.Email = model.Email;
             user.PhoneNumber = model.PhoneNumber;
+            user.DateOfBirth = model.DateOfBirth;
+            user.Address = model.Address;
+            user.MembershipType = model.MembershipType;
+            user.Status = model.Status;
+            user.IsActive = model.IsActive;
 
-            await _userManager.UpdateAsync(user);
-            return RedirectToAction("ManageUsers");
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                return RedirectToAction("ManageUsers");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
+            return View(model);
         }
 
         [HttpPost]

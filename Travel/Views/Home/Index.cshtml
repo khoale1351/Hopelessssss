@@ -171,62 +171,35 @@
     </div>
 </div>
 <!-- Featured Tours Section -->
-<!-- Featured Tours -->
+<!-- Featured Tours Section -->
 <section class="featured-tours py-5">
     <div class="container">
-        <h2 class="text-center mb-4">Featured Tours</h2>
+        <h2 class="text-center mb-4">Tour nổi bật</h2>
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card shadow-lg">
-                    <a href="/Tour/Details">
-                        <img src="~/images/dalat.jpg" class="card-img-top" alt="Tour Đà Lạt">
-                    </a>
-                    <div class="card-body">
-                        <a href="/Tour/Details">
-                            <h5 class="card-title">Tour Đà Lạt</h5>
+            @foreach (var tour in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card shadow-lg">
+                        <a href="/Tour/Details/@tour.TourId">
+                            <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.TourName" loading="lazy">
                         </a>
-                        <p class="card-text">Khám phá thành phố ngàn hoa với đồi thông bạt ngàn.</p>
-                        <p class="text-danger fw-bold">Giá: 2,500,000 VNĐ</p>
-                        <a href="/Tour/Details" class="btn btn-primary w-100">Đặt ngay</a>
+                        <div class="card-body">
+                            <a href="/Tour/Details/@tour.TourId" class="text-decoration-none text-dark">
+                                <h5 class="card-title">@tour.TourName</h5>
+                            </a>
+                            @if (!string.IsNullOrEmpty(tour.Description))
+                            {
+                                <p class="card-text">@tour.Description</p>
+                            }
+                            <p class="text-danger fw-bold">Giá: @tour.Price VNĐ</p>
+                            <a href="/Tour/Details/@tour.TourId" class="btn btn-primary w-100">Đặt ngay</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-lg">
-                    <a href="/Tour/Details">
-                        <img src="~/images/nhatrang.jpg" class="card-img-top" alt="Tour Nha Trang">
-                    </a>
-                    <div class="card-body">
-                        <a href="/Tour/Details">
-                            <h5 class="card-title">Tour Nha Trang</h5>
-                        </a>
-                        <p class="card-text">Thưởng thức bãi biển xanh, cát trắng và nắng vàng tại Nha Trang.</p>
-                        <p class="text-danger fw-bold">Giá: 3,000,000 VNĐ</p>
-                        <a href="/Tour/Details" class="btn btn-primary w-100">Đặt ngay</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-lg">
-                    <a href="/Tour/Details">
-                        <img src="~/images/halong.jpg" class="card-img-top" alt="Tour Hạ Long">
-                    </a>
-                    <div class="card-body">
-                        <a href="/Tour/Details">
-                            <h5 class="card-title">Tour Hạ Long</h5>
-                        </a>
-                        <p class="card-text">Đắm mình vào vẻ đẹp hoang sơ và thiên đường biển tại Hạ Long.</p>
-                        <p class="text-danger fw-bold">Giá: 3,500,000 VNĐ</p>
-                        <a href="/Tour/Details" class="btn btn-primary w-100">Đặt ngay</a>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>
-
 
 <!-- Map Section -->
 <section class="container my-5">

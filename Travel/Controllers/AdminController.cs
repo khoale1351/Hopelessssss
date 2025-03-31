@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Travel.Models;
 using Travel.Models.ViewModels;
 using Travel.Repositories;
-using Travel.ViewModels;
 
 namespace Travel.Controllers
 {
@@ -288,57 +287,7 @@ namespace Travel.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            var viewModel = new TourViewModel
-            {
-                DestinationOptions = await _unitOfWork.Destinations.GetAllAsync()
-            };
-            return View(viewModel);
-        }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TourViewModel model)
-        {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var newTour = new Tour
-                    {
-                        TourName = model.TourName,
-                        Description = model.Description,
-                        Price = model.Price,
-                        Duration = model.Duration,
-                        StartDate = model.StartDate,
-                        EndDate = model.EndDate,
-                        AvailableSeats = model.AvailableSeats,
-                        TourType = model.TourType,
-                        TourStatus = model.TourStatus,
-                        DestinationId = model.DestinationId,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    await _unitOfWork.Tours.AddAsync(newTour);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    TempData["SuccessMessage"] = "Tour created successfully!";
-                    return RedirectToAction("Index");
-                }
-
-                // Nếu có lỗi validation, load lại danh sách điểm đến
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Error creating tour: " + ex.Message);
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
-                return View(model);
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> GetTourDetails(int id)

@@ -1,15 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using Travel.Data;
 using Travel.Repositories;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Travel.Data;
 using Travel.Models;
-using Travel.Repositories;
-using Travel.ViewModels;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Travel.Controllers
 {
@@ -17,81 +12,70 @@ namespace Travel.Controllers
     public class AdminController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMemoryCache _cache;
 
-        public AdminController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
-        {
-            _signInManager = signInManager;
-            _userManager = userManager;
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (await _userManager.IsInRoleAsync(user, "Admin"))
-                    {
-                        return RedirectToAction("Index", "Admin"); // Điều hướng Admin đến /Admin/Index
-                    }
-                    return RedirectToAction("Index", "Home"); // Người dùng thường đến /Home/Index
-                }
-                ModelState.AddModelError("", "Đăng nhập thất bại.");
-            }
-            return View(model);
-        }
-
-        public AdminController(IUnitOfWork unitOfWork)
+        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, IMemoryCache cache)
         {
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
+            _cache = cache;
         }
 
-        public IActionResult Management() // Đổi từ "Managerment" thành "Management"
-        {
-            return View("Management"); // Trả về Views/Admin/Admin.cshtml
-        }
-
+        //Trang tổng quan Dashboard
         public async Task<IActionResult> Index()
         {
-            var totalUsers = await _unitOfWork.Users.GetAllAsync();
-            var totalTours = await _unitOfWork.Tours.GetAllAsync();
-            var totalBookings = await _unitOfWork.Bookings.GetAllAsync();
-            var totalReviews = await _unitOfWork.Reviews.GetAllAsync();
-            ViewBag.TotalUsers = totalUsers.Count();
-            ViewBag.TotalTours = totalTours.Count();
-            ViewBag.TotalBookings = totalBookings.Count();
-            ViewBag.TotalReviews = totalReviews.Count();
+            var cacheKey = "DashboardData";
+            if (!_cache.TryGetValue(cacheKey, out (int users, int tours, int bookings, int reviews) dashboardData))
+            {
+                try
+                {
+                    var totalUsers = await _unitOfWork.Users.GetAllAsync();
+                    var totalTours = await _unitOfWork.Tours.GetAllAsync();
+                    var totalBookings = await _unitOfWork.Bookings.GetAllAsync();
+                    var totalReviews = await _unitOfWork.Reviews.GetAllAsync();
+
+                    dashboardData = (totalUsers.Count(), totalTours.Count(), totalBookings.Count(), totalReviews.Count());
+                    _cache.Set(cacheKey, dashboardData, TimeSpan.FromMinutes(5));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Lỗi tải dữ liệu: " + ex.Message);
+                }
+            }
+
+            ViewBag.TotalUsers = dashboardData.users;
+            ViewBag.TotalTours = dashboardData.tours;
+            ViewBag.TotalBookings = dashboardData.bookings;
+            ViewBag.TotalReviews = dashboardData.reviews;
             return View();
         }
 
-        public IActionResult ManageUsers()
+        //Quản lý người dùng
+        public async Task<IActionResult> ManageUsers()
         {
-            var users = _unitOfWork.Users.GetAllAsync();
+            var users = await _unitOfWork.Users.GetAllAsync();
             return View(users);
         }
 
-        public IActionResult ManageTours()
+        //Quản lý Tour
+        public async Task<IActionResult> ManageTours()
         {
-            var tours = _unitOfWork.Tours.GetAllAsync();
+            var tours = await _unitOfWork.Tours.GetAllAsync();
             return View(tours);
         }
 
-
-        public IActionResult ManageBookings()
+        //Quản lý đặt tour
+        public async Task<IActionResult> ManageBookings()
         {
-            var bookings = _unitOfWork.Bookings.GetAllAsync();
+            var bookings = await _unitOfWork.Bookings.GetAllAsync();
             return View(bookings);
         }
-
-        public IActionResult ManageReviews()
+        
+        //Quản lý đánh giá
+        public async Task<IActionResult> ManageReviews()
         {
-            var reviews = _unitOfWork.Reviews.GetAllAsync();
+            var reviews = await _unitOfWork.Reviews.GetAllAsync();
             return View(reviews);
         }
     }

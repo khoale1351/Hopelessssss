@@ -1,0 +1,89 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@model IEnumerable<ApplicationUser>
+
+@{
+    ViewData["Title"] = "Quản lý Người dùng";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-users me-1"></i> Danh sách Người dùng</div>
+            <a asp-controller="User" asp-action="Create" class="btn btn-primary">Thêm Người Dùng</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Họ và Tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var roles = await UserManager.GetRolesAsync(user);
+                            <tr>
+                                <td>@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>
+                                    <form asp-controller="User" asp-action="ChangeRole" method="post">
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <select name="newRole" class="form-select" onchange="this.form.submit()">
+                                            @foreach (var role in RoleManager.Roles)
+                                            {
+                                                <option value="@role.Name" selected="@(roles.Contains(role.Name) ? "selected" : null)">@role.Name</option>
+                                            }
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    @if (user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow)
+                                    {
+                                        <span class="text-danger">Bị khóa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success">Hoạt động</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-controller="User" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-warning btn-sm">Sửa</a>
+                                    <form asp-controller="User" asp-action="Delete" method="post" style="display:inline;">
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">Xóa</button>
+                                    </form>
+                                    @if (user.LockoutEnd == null || user.LockoutEnd < DateTime.UtcNow)
+                                    {
+                                        <form asp-controller="User" asp-action="LockUser" method="post" style="display:inline;">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-secondary btn-sm">Khóa</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-controller="User" asp-action="UnlockUser" method="post" style="display:inline;">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-success btn-sm">Mở khóa</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+}

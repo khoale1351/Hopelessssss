@@ -3,7 +3,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,28 +13,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Admin Panel</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li><a href="/Admin/Dashboard" class="nav-link">Dashboard</a></li>
-                    <li><a href="/Admin/Management" class="nav-link">Quản lý Tour</a></li>
-                    <li><a href="/Admin/Users" class="nav-link">Quản lý Người dùng</a></li>
-                    <li><a href="/Admin/Reports" class="nav-link">Báo cáo</a></li>
-                </ul>
                 <ul class="navbar-nav ms-auto">
                     @if (SignInManager.IsSignedIn(User))
                     {
                         var user = await UserManager.GetUserAsync(User);
-                        <li class="nav-item">
-                            <span class="nav-link text-white">Chào, @user.FullName!</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> @user.FullName
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/Admin/Profile">Hồ sơ</a></li>
+                                <li><a class="dropdown-item" href="/Admin/Settings">Cài đặt</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Đăng xuất</a></li>
+                            </ul>
                         </li>
                     }
                 </ul>
@@ -42,9 +41,41 @@
         </div>
     </nav>
 
-    <main class="container mt-4">
-        @RenderBody()
-    </main>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="bg-dark text-white p-3 sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link text-white" href="/Admin/Index">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/Admin/ManageTours">
+                        <i class="fas fa-map"></i> Quản lý Tour
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/Admin/ManageUsers">
+                        <i class="fas fa-users"></i> Quản lý Người dùng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/Admin/ManageBookings">
+                        <i class="fas fa-users"></i> Quản lý Đặt tour
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/Admin/ManageReviews">
+                        <i class="fas fa-users"></i> Quản lý Đánh giá
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Content -->
+        <main class="container-fluid p-4 flex-grow-1">
+            @RenderBody()
+        </main>
+    </div>
 
     <footer class="text-center py-3 bg-dark text-white">
         <p>&copy; <span id="year"></span> Admin Panel. All rights reserved.</p>
@@ -53,7 +84,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById("year").textContent = new Date().getFullYear();
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("year").textContent = new Date().getFullYear();
+        });
     </script>
 
     @RenderSection("Scripts", required: false)

@@ -1,0 +1,42 @@
+﻿@model IEnumerable<Travel.Models.Booking>
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewData["Title"] = "Quản lý Đặt Tour";
+}
+
+<h2>Danh sách Đặt Tour</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Khách hàng</th>
+            <th>Tour</th>
+            <th>Ngày đặt</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.BookingId</td>
+                <td>@(booking.User?.UserName ?? "Không có thông tin")</td>
+                <td>@(booking.Tour?.TourId.ToString() ?? "Không có thông tin")</td>
+                <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                <td>@booking.TotalPrice.ToString("N0") VNĐ</td>
+                <td>
+                    <span class="badge @(booking.Status == "Confirmed" ? "bg-success" : "bg-warning")">
+                        @booking.Status
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-info btn-sm">Chi tiết</button>
+                    <button class="btn btn-danger btn-sm">Hủy</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

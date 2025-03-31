@@ -1,0 +1,25 @@
+﻿@model Travel.Models.Voucher
+
+@{
+    ViewData["Title"] = "Voucher Details";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <h3>Voucher Code: @Model.Code</h3>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Discount Amount:</strong> @Model.DiscountAmount</p>
+    <p><strong>Discount Percentage:</strong> @Model.DiscountPercentage</p>
+    <p><strong>Minimum Booking Value:</strong> @Model.MinimumBookingValue</p>
+    <p><strong>Max Discount Amount:</strong> @Model.MaxDiscountAmount</p>
+    <p><strong>Expiry Date:</strong> @Model.ExpiryDate.ToString("MM/dd/yyyy")</p>
+    <p><strong>Usage Limit:</strong> @Model.UsageLimit</p>
+    <p><strong>Usage Count:</strong> @Model.UsageCount</p>
+    <p><strong>Is Active:</strong> @Model.IsActive</p>
+</div>
+
+<div>
+    <a href="@Url.Action("Edit", new { id = Model.VoucherId })" class="btn btn-warning">Edit</a>
+    <a href="@Url.Action("Index")" class="btn btn-primary">Back to List</a>
+</div>

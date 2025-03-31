@@ -118,7 +118,20 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Điểm đến</label>
-                            
+                            <select class="form-select" name="DestinationId" id="destinationDropdown">
+                                <option value="">Chọn điểm đến...</option>
+                                @if (ViewBag.Destinations != null)
+                                {
+                                    foreach (var destination in ViewBag.Destinations)
+                                    {
+                                        <option value="@destination.DestinationId">@destination.Name</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled>Không có điểm đến nào!</option>
+                                }
+                            </select>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -289,6 +302,17 @@
         };
     }
 }
+
+<script>
+    $(document).ready(function () {
+        $("#destinationDropdown").select2({
+            placeholder: "Nhập điểm đến...",
+            allowClear: true
+        });
+    });
+</script>
+
+
 
 
 

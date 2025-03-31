@@ -1,58 +1,159 @@
 ﻿@model IEnumerable<Travel.Models.Voucher>
 @{
-    ViewData["Title"] = "Manage Vouchers";
+    ViewData["Title"] = "Quản lý Voucher";
+    Layout = "_LayoutAdmin";
 }
 
-<h1>Manage Vouchers</h1>
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý Voucher</h1>
 
-<div class="d-flex justify-content-between">
-    <a href="/Admin/AddVoucher" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Thêm Voucher
-    </a>
+    <!-- Thông báo thành công -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-tags me-1"></i>
+                Danh sách Voucher
+            </div>
+            <a asp-action="AddVoucher" class="btn btn-light btn-sm">
+                <i class="fas fa-plus me-1"></i> Thêm Voucher
+            </a>
+        </div>
+
+        <div class="card-body">
+            <!-- Thanh công cụ tìm kiếm và lọc -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Tìm theo mã voucher...">
+                </div>
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered" id="vouchersTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mã Voucher</th>
+                            <th>Mô tả</th>
+                            <th>Giảm giá</th>
+                            <th>Giới hạn</th>
+                            <th>Ngày hết hạn</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var voucher in Model)
+                        {
+                            <tr>
+                                <td>@voucher.Code</td>
+                                <td>@voucher.Description</td>
+                                <td>
+                                    @if (voucher.DiscountAmount > 0)
+                                    {
+                                        <span>@voucher.DiscountAmount.ToString("N0") VNĐ</span>
+                                    }
+                                    else if (voucher.DiscountPercentage.HasValue)
+                                    {
+                                        <span>@voucher.DiscountPercentage.Value.ToString("F2")%</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Không có</span>
+                                    }
+                                </td>
+                                <td>@(voucher.UsageLimit?.ToString() ?? "Không giới hạn")</td>
+                                <td>@voucher.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @(voucher.IsActive ? "bg-success" : "bg-danger")">
+                                        @(voucher.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="EditVoucher" asp-route-id="@voucher.VoucherId"
+                                           class="btn btn-warning" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-danger delete-btn"
+                                                data-id="@voucher.VoucherId" title="Xóa">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-<table class="table table-bordered table-striped mt-3">
-    <thead>
-        <tr>
-            <th>Mã Voucher</th>
-            <th>Mô tả</th>
-            <th>Số tiền giảm</th>
-            <th>Phần trăm giảm</th>
-            <th>Giới hạn sử dụng</th>
-            <th>Ngày hết hạn</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var voucher in Model)
-        {
-            <tr>
-                <td>@voucher.Code</td>
-                <td>@voucher.Description</td>
-                <td>@voucher.DiscountAmount.ToString("C")</td>
-                <td>@(voucher.DiscountPercentage.HasValue ? voucher.DiscountPercentage.Value.ToString("F2") + "%" : "Không có")</td>
-                <td>@(voucher.UsageLimit.HasValue ? voucher.UsageLimit.Value.ToString() : "Không giới hạn")</td>
-                <td>@voucher.ExpiryDate.ToString("dd/MM/yyyy")</td>
-                <td>
-                    @if (voucher.IsActive)
-                    {
-                        <span class="badge bg-success">Active</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Inactive</span>
-                    }
-                </td>
-                <td>
-                    <a href="/Admin/EditVoucher/@voucher.VoucherId" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i> Sửa
-                    </a>
-                    <a href="/Admin/DeleteVoucher/@voucher.VoucherId" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">
-                        <i class="fas fa-trash-alt"></i> Xóa
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa voucher này?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Khởi tạo DataTable
+            var table = $('#vouchersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+                },
+                columnDefs: [
+                    { orderable: false, targets: [6] } // Tắt sắp xếp cho cột hành động
+                ]
+            });
+
+            // Tìm kiếm theo mã voucher
+            $('#searchInput').keyup(function () {
+                table.columns(0).search(this.value).draw();
+            });
+
+            // Lọc theo trạng thái
+            $('#statusFilter').change(function () {
+                table.columns(5).search(this.value).draw();
+            });
+
+            // Xử lý nút xóa
+            $('.delete-btn').click(function() {
+                var id = $(this).data('id');
+                $('#deleteForm').attr('action', '@Url.Action("DeleteVoucher")/' + id);
+                $('#deleteModal').modal('show');
+            });
+        });
+    </script>
+}

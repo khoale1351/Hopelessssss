@@ -3,6 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Travel.Data;
 using Travel.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using Travel.Data;
+using Travel.Models;
+using Travel.Repositories;
+using Travel.ViewModels;
 
 namespace Travel.Controllers
 {
@@ -11,9 +18,43 @@ namespace Travel.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public AdminController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        {
+            _signInManager = signInManager;
+            _userManager = userManager;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                if (result.Succeeded)
+                {
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (await _userManager.IsInRoleAsync(user, "Admin"))
+                    {
+                        return RedirectToAction("Index", "Admin"); // Điều hướng Admin đến /Admin/Index
+                    }
+                    return RedirectToAction("Index", "Home"); // Người dùng thường đến /Home/Index
+                }
+                ModelState.AddModelError("", "Đăng nhập thất bại.");
+            }
+            return View(model);
+        }
+
         public AdminController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
+        }
+
+        public IActionResult Management() // Đổi từ "Managerment" thành "Management"
+        {
+            return View("Management"); // Trả về Views/Admin/Admin.cshtml
         }
 
         public async Task<IActionResult> Index()

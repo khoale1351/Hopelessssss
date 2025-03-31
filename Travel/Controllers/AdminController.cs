@@ -223,7 +223,16 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, DateTime.UtcNow.AddYears(100));
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTime.UtcNow.AddYears(100);
+            user.IsActive = false; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
 
@@ -233,9 +242,18 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, null);
+            user.LockoutEnd = null;
+            user.IsActive = true; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể mở khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
+
 
         // Quản lý Tour
         public async Task<IActionResult> ManageTours()
@@ -354,5 +372,12 @@ namespace Travel.Controllers
             }
             return RedirectToAction(nameof(ManageVouchers));
         }
+
+        public IActionResult TEST()
+        {
+            return View();
+        }
+
+
     }
 }

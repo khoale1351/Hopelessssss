@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Travel.Models.Voucher>
+
+@{
+    ViewData["Title"] = "Voucher List";
+}
+
+@if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+{
+    <h1>@ViewData["Title"]</h1>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <p>
+            <a href="@Url.Action("Create")" class="btn btn-primary">Create New Voucher</a>
+        </p>
+    }
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Discount Amount</th>
+                <th>Discount Percentage</th>
+                <th>Expiry Date</th>
+                <th>Is Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var voucher in Model)
+            {
+                <tr>
+                    <td>@voucher.Code</td>
+                    <td>@voucher.Description</td>
+                    <td>@voucher.DiscountAmount.ToString("C")</td>
+                    <td>@voucher.DiscountPercentage%</td>
+                    <td>@voucher.ExpiryDate.ToString("MM/dd/yyyy")</td>
+                    <td>@(voucher.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+                        {
+                            <a href="@Url.Action("Edit", new { id = voucher.VoucherId })" class="btn btn-warning btn-sm">Edit</a>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a href="@Url.Action("Delete", new { id = voucher.VoucherId })" class="btn btn-danger btn-sm">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <h2 class="text-danger">Bạn không có quyền truy cập trang này.</h2>
+}

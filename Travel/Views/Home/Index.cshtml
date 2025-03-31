@@ -1,4 +1,7 @@
-﻿@{
+﻿@model IEnumerable<Travel.Models.Tour>
+@using System.Linq
+
+@{
     ViewData["Title"] = "Home";
 }
 
@@ -170,34 +173,41 @@
         </div>
     </div>
 </div>
-<!-- Featured Tours Section -->
+
 <!-- Featured Tours Section -->
 <section class="featured-tours py-5">
     <div class="container">
         <h2 class="text-center mb-4">Tour nổi bật</h2>
-        <div class="row g-4">
-            @foreach (var tour in Model)
-            {
-                <div class="col-md-4">
-                    <div class="card shadow-lg">
-                        <a href="/Tour/Details/@tour.TourId">
-                            <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.TourName" loading="lazy">
-                        </a>
-                        <div class="card-body">
-                            <a href="/Tour/Details/@tour.TourId" class="text-decoration-none text-dark">
-                                <h5 class="card-title">@tour.TourName</h5>
+        @if (Model != null && Model.Any())
+        {
+            <div class="row g-4">
+                @foreach (var tour in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="card shadow-lg">
+                            <a href="/Tour/Details/@tour.TourId">
+                                <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.TourName" loading="lazy">
                             </a>
-                            @if (!string.IsNullOrEmpty(tour.Description))
-                            {
-                                <p class="card-text">@tour.Description</p>
-                            }
-                            <p class="text-danger fw-bold">Giá: @tour.Price VNĐ</p>
-                            <a href="/Tour/Details/@tour.TourId" class="btn btn-primary w-100">Đặt ngay</a>
+                            <div class="card-body">
+                                <a href="/Tour/Details/@tour.TourId" class="text-decoration-none text-dark">
+                                    <h5 class="card-title">@tour.TourName</h5>
+                                </a>
+                                @if (!string.IsNullOrEmpty(tour.Description))
+                                {
+                                    <p class="card-text">@tour.Description</p>
+                                }
+                                <p class="text-danger fw-bold">Giá: @tour.Price VNĐ</p>
+                                <a href="/Tour/Details/@tour.TourId" class="btn btn-primary w-100">Đặt ngay</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-center">Hiện tại không có tour nổi bật nào.</p>
+        }
     </div>
 </section>
 

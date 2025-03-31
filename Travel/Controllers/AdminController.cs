@@ -243,7 +243,36 @@ namespace Travel.Controllers
             var tours = await _unitOfWork.Tours.GetAllAsync();
             return View(tours);
         }
+        [HttpGet]
+        public async Task<IActionResult> SearchDestinations(string searchTerm)
+        {
+            try
+            {
+                // Lấy danh sách điểm đến phù hợp với từ khóa tìm kiếm
+                var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
+                var filteredDestinations = destinations
+                    .Where(d =>
+                        d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                        d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                        d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .Select(d => new
+                    {
+                        destinationId = d.DestinationId,
+                        name = d.Name,
+                        city = d.City,  // Sửa thành City
+                        country = d.Country // Sửa thành Country
+                    })
+                    .ToList();
+
+                return Json(filteredDestinations); // Sửa tên biến
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi nếu cần
+                return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+            }
+        }
         // Quản lý đặt tour
         public async Task<IActionResult> ManageBookings()
         {

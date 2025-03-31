@@ -1,125 +1,131 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Travel.Data;
-//using Travel.Migrations;
 using Travel.Models;
+using Travel.Repositories.ToursRepository;
+using Travel.ViewModels;
+using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Travel.Repositories.DestinationsRepository;
 
 namespace Travel.Controllers
 {
     [Authorize]
     public class TourController : Controller
     {
-        private readonly TourismDbContext _context;
+        private readonly ITourRepository _tourRepository;
+        private readonly IDestinationRepository _destinationRepository;
 
-        public TourController(TourismDbContext context)
+        public TourController(ITourRepository tourRepository, IDestinationRepository destinationRepository)
         {
-            _context = context;
+            _tourRepository = tourRepository;
+            _destinationRepository = destinationRepository;
         }
 
-        [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var tours = _context.Tours.ToList();
-            return View(tours);
-        }
-
-        // Hiển thị trang đặt tour
-        public IActionResult Book()
-        {
-            return View();
-        }
-
-        // Xử lý đặt tour (POST)
-        [HttpPost]
-        public IActionResult Book(string tour, string name, string email, string phone)
-        {
-            // Lưu thông tin đặt tour (ví dụ: vào database)
-            // Ở đây chỉ là ví dụ đơn giản, bạn có thể thêm logic xử lý thực tế
-            ViewBag.Message = $"Thank you, {name}! Your booking for Tour ID {tour} has been received.";
-            return View();
-        }
-
-        public IActionResult Details(int id)
-        {
-            var tour = _context.Tours.FirstOrDefault(t => t.TourId == id);
-            if (tour == null)
+            var tours = await _tourRepository.GetAllAsync();
+            var tourViewModels = tours.Select(t => new TourViewModel
             {
+                TourId = t.TourId,
+                TourName = t.TourName,
+                DestinationName = t.Destination.Name,
+                Price = t.Price,
+                StartDate = t.StartDate.ToString("dd/MM/yyyy"),
+                EndDate = t.EndDate.ToString("dd/MM/yyyy"),
+                AvailableSeats = t.AvailableSeats,
+                TourType = t.TourType,
+                TourStatus = t.TourStatus
+            }).ToList();
+            return View(tourViewModels);
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var tour = await _tourRepository.GetByIdAsync(id);
+            if (tour == null)
                 return NotFound();
-            }
-            return View(tour);
+
+            var tourViewModel = new TourViewModel
+            {
+                TourId = tour.TourId,
+                DestinationId = tour.DestinationId,
+                TourName = tour.TourName,
+                DestinationName = tour.Destination.Name,
+                Description = tour.Description,
+                Price = tour.Price,
+                StartDate = tour.StartDate.ToString("dd/MM/yyyy"),
+                EndDate = tour.EndDate.ToString("dd/MM/yyyy"),
+                AvailableSeats = tour.AvailableSeats,
+                TourType = tour.TourType,
+                TourStatus = tour.TourStatus,
+                Duration = tour.Duration
+            };
+
+            return View(tourViewModel);
         }
 
         [Authorize(Roles = "Admin,Manager")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var destinations = await _destinationRepository.GetAllAsync();
+            ViewBag.Destinations = new SelectList(destinations, "DestinationId", "Name");
             return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Create(Tour tour)
         {
             if (ModelState.IsValid)
             {
-                tour.CreatedAt = DateTime.UtcNow;
-                _context.Tours.Add(tour);
-                await _context.SaveChangesAsync();
+                await _tourRepository.AddAsync(tour);
                 return RedirectToAction(nameof(Index));
             }
             return View(tour);
         }
 
         [Authorize(Roles = "Admin,Manager")]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var tour = _context.Tours.FirstOrDefault(t => t.TourId == id);
+            var tour = await _tourRepository.GetByIdAsync(id);
             if (tour == null)
-            {
                 return NotFound();
-            }
             return View(tour);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(int id, Tour tour)
         {
             if (id != tour.TourId)
-            {
-                return BadRequest();
-            }
+                return NotFound();
+
             if (ModelState.IsValid)
             {
-                _context.Tours.Update(tour);
-                await _context.SaveChangesAsync();
+                await _tourRepository.UpdateAsync(tour);
                 return RedirectToAction(nameof(Index));
             }
             return View(tour);
         }
 
-        [Authorize(Roles = "Admin,Manager")]
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var tour = _context.Tours.FirstOrDefault(t => t.TourId == id);
+            var tour = await _tourRepository.GetByIdAsync(id);
             if (tour == null)
-            {
                 return NotFound();
-            }
             return View(tour);
         }
 
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var tour = _context.Tours.Find(id);
+            var tour = await _tourRepository.GetByIdAsync(id);
             if (tour != null)
             {
-                _context.Tours.Remove(tour);
-                await _context.SaveChangesAsync();
+                await _tourRepository.DeleteAsync(id);
             }
             return RedirectToAction(nameof(Index));
         }

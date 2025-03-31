@@ -4,7 +4,7 @@ using Travel.Models;
 using Travel.Repositories.PublicRepository;
 
 
-namespace Travel.Repositories.Destinations
+namespace Travel.Repositories.DestinationsRepository
 {
     public class DestinationRepository : GenericRepository<Destination>, IDestinationRepository
     {
@@ -30,5 +30,7 @@ namespace Travel.Repositories.Destinations
                 .Where(d => d.City.ToLower() == city.ToLower())
                 .ToListAsync();
         }
+
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Travel.Models;
 using Travel.Repositories.PublicRepository;
 
-namespace Travel.Repositories.Destinations
+namespace Travel.Repositories.DestinationsRepository
 {
     public interface IDestinationRepository : IGenericRepository<Destination>
     {

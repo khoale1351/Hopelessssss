@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Travel.Models;
 using Travel.Repositories.ToursRepository;
-using Travel.ViewModels;
-using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Travel.Repositories.DestinationsRepository;
+using Travel.ViewModels;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Travel.Controllers
 {
@@ -22,6 +22,7 @@ namespace Travel.Controllers
             _destinationRepository = destinationRepository;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var tours = await _tourRepository.GetAllAsync();
@@ -61,7 +62,6 @@ namespace Travel.Controllers
                 TourStatus = tour.TourStatus,
                 Duration = tour.Duration
             };
-
             return View(tourViewModel);
         }
 
@@ -74,11 +74,13 @@ namespace Travel.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Create(Tour tour)
         {
             if (ModelState.IsValid)
             {
+                tour.CreatedAt = DateTime.UtcNow;
                 await _tourRepository.AddAsync(tour);
                 return RedirectToAction(nameof(Index));
             }
@@ -95,11 +97,12 @@ namespace Travel.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(int id, Tour tour)
         {
             if (id != tour.TourId)
-                return NotFound();
+                return BadRequest();
 
             if (ModelState.IsValid)
             {
@@ -119,6 +122,7 @@ namespace Travel.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -128,6 +132,20 @@ namespace Travel.Controllers
                 await _tourRepository.DeleteAsync(id);
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // Thêm chức năng Book từ code mới
+        public IActionResult Book()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Book(string tour, string name, string email, string phone)
+        {
+            ViewBag.Message = $"Thank you, {name}! Your booking for Tour ID {tour} has been received.";
+            return View();
         }
     }
 }

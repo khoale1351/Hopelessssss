@@ -167,5 +167,102 @@ namespace Travel.Controllers
             var reviews = await _unitOfWork.Reviews.GetAllAsync();
             return View(reviews);
         }
+
+        // Quản lý Voucher
+        public async Task<IActionResult> ManageVouchers()
+        {
+            var vouchers = await _unitOfWork.Vouchers.GetAllAsync();
+            return View(vouchers);
+        }
+
+        public async Task<IActionResult> DetailsVoucher(int id)
+        {
+            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+            if (voucher == null)
+            {
+                return NotFound();
+            }
+            return View(voucher);
+        }
+
+        public IActionResult CreateVoucher()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateVoucher([Bind("VoucherId,Code,Description,DiscountAmount,DiscountPercentage,MinimumBookingValue,MaxDiscountAmount,ExpiryDate,UsageLimit,UsageCount,IsActive")] Voucher voucher)
+        {
+            if (ModelState.IsValid)
+            {
+                await _unitOfWork.Vouchers.AddAsync(voucher);
+                await _unitOfWork.SaveChangesAsync();
+                return RedirectToAction(nameof(ManageVouchers));
+            }
+            return View(voucher);
+        }
+
+        public async Task<IActionResult> EditVoucher(int id)
+        {
+            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+            if (voucher == null)
+            {
+                return NotFound();
+            }
+            return View(voucher);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditVoucher(int id, [Bind("VoucherId,Code,Description,DiscountAmount,DiscountPercentage,MinimumBookingValue,MaxDiscountAmount,ExpiryDate,UsageLimit,UsageCount,IsActive")] Voucher voucher)
+        {
+            if (id != voucher.VoucherId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _unitOfWork.Vouchers.UpdateAsync(voucher);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (await _unitOfWork.Vouchers.GetByIdAsync(id) == null)
+                    {
+                        return NotFound();
+                    }
+                    throw;
+                }
+                return RedirectToAction(nameof(ManageVouchers));
+            }
+            return View(voucher);
+        }
+
+        public async Task<IActionResult> DeleteVoucher(int id)
+        {
+            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+            if (voucher == null)
+            {
+                return NotFound();
+            }
+            return View(voucher);
+        }
+
+        [HttpPost, ActionName("DeleteVoucher")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteVoucherConfirmed(int id)
+        {
+            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+            if (voucher != null)
+            {
+                await _unitOfWork.Vouchers.DeleteAsync(id);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(ManageVouchers));
+        }
     }
 }

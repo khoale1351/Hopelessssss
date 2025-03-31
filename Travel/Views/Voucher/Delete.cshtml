@@ -1,0 +1,21 @@
+﻿@model Travel.Models.Voucher
+
+@{
+    ViewData["Title"] = "Delete Voucher";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h3>Are you sure you want to delete this voucher?</h3>
+<div>
+    <h4>Voucher Code: @Model.Code</h4>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Discount Amount:</strong> @Model.DiscountAmount</p>
+    <p><strong>Discount Percentage:</strong> @Model.DiscountPercentage</p>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="VoucherId" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+</form>

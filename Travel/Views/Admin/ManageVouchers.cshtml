@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Travel.Models.Voucher>
+@{
+    ViewData["Title"] = "Manage Vouchers";
+}
+
+<h1>Manage Vouchers</h1>
+
+<div class="d-flex justify-content-between">
+    <a href="/Admin/AddVoucher" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Thêm Voucher
+    </a>
+</div>
+
+<table class="table table-bordered table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Mã Voucher</th>
+            <th>Mô tả</th>
+            <th>Số tiền giảm</th>
+            <th>Phần trăm giảm</th>
+            <th>Giới hạn sử dụng</th>
+            <th>Ngày hết hạn</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var voucher in Model)
+        {
+            <tr>
+                <td>@voucher.Code</td>
+                <td>@voucher.Description</td>
+                <td>@voucher.DiscountAmount.ToString("C")</td>
+                <td>@(voucher.DiscountPercentage.HasValue ? voucher.DiscountPercentage.Value.ToString("F2") + "%" : "Không có")</td>
+                <td>@(voucher.UsageLimit.HasValue ? voucher.UsageLimit.Value.ToString() : "Không giới hạn")</td>
+                <td>@voucher.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    @if (voucher.IsActive)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactive</span>
+                    }
+                </td>
+                <td>
+                    <a href="/Admin/EditVoucher/@voucher.VoucherId" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+                    <a href="/Admin/DeleteVoucher/@voucher.VoucherId" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">
+                        <i class="fas fa-trash-alt"></i> Xóa
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

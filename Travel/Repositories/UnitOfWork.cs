@@ -4,7 +4,7 @@ using Travel.Models;
 using Travel.Repositories.BookingsRepository;
 using Travel.Repositories.DestinationsRepository;
 using Travel.Repositories.NotificationsRepository;
-using Travel.Repositories.PaymentRepository;
+using Travel.Repositories.PaymentRepository; // Đã import namespace chứa PaymentRepository
 using Travel.Repositories.ReviewsRepository;
 using Travel.Repositories.ToursRepository;
 using Travel.Repositories.Users;
@@ -19,7 +19,7 @@ namespace Travel.Repositories
         public IDestinationRepository Destinations { get; private set; }
         public ITourRepository Tours { get; private set; }
         public IVoucherRepository Vouchers { get; private set; }
-        public IBookingRepostiory Bookings { get; private set; }
+        public IBookingRepository Bookings { get; private set; }
         public IPaymentRepository Payments { get; private set; }
         public IReviewRepository Reviews { get; private set; }
         public INotificationRepository Notifications { get; private set; }
@@ -32,7 +32,7 @@ namespace Travel.Repositories
             Tours = new TourRepository(_context);
             Vouchers = new VoucherRepository(_context);
             Bookings = new BookingRepository(_context);
-            Payments = new PaymentRepository.PaymentRepository(_context);
+            Payments = new PaymentRepository.PaymentRepository(_context); // Fixed the namespace issue
             Reviews = new ReviewRepository(_context);
             Notifications = new NotificationRepository(_context);
         }

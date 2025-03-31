@@ -57,7 +57,7 @@ namespace Travel
             builder.Services.AddScoped<IDestinationRepository, DestinationRepository>();
             builder.Services.AddScoped<ITourRepository, TourRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
-            builder.Services.AddScoped<IBookingRepostiory, BookingRepository>();
+            builder.Services.AddScoped<IBookingRepository, BookingRepository>();
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();

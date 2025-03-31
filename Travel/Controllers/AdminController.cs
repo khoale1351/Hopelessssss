@@ -61,6 +61,7 @@ namespace Travel.Controllers
         //Quản lý Tour
         public async Task<IActionResult> ManageTours()
         {
+
             var tours = await _unitOfWork.Tours.GetAllAsync();
             return View(tours);
         }

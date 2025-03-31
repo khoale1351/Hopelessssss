@@ -118,18 +118,14 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Điểm đến</label>
-                            <select class="form-select" name="DestinationId" id="destinationDropdown">
-                                <option value="">Chọn điểm đến...</option>
+                            <select class="form-control select2-destination" name="DestinationId" id="destinationDropdown" required>
+                                <option value="">Tìm kiếm điểm đến...</option>
                                 @if (ViewBag.Destinations != null)
                                 {
                                     foreach (var destination in ViewBag.Destinations)
                                     {
-                                        <option value="@destination.DestinationId">@destination.Name</option>
+                                        <option value="@destination.DestinationId">@destination.Name - @destination.City, @destination.Country</option>
                                     }
-                                }
-                                else
-                                {
-                                    <option disabled>Không có điểm đến nào!</option>
                                 }
                             </select>
                         </div>
@@ -303,17 +299,41 @@
     }
 }
 
-<script>
-    $(document).ready(function () {
-        $("#destinationDropdown").select2({
-            placeholder: "Nhập điểm đến...",
-            allowClear: true
+@section Scripts {
+    <!-- Thêm thư viện Select2 trước -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#destinationDropdown').select2({
+                placeholder: "Nhập tên điểm đến...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#addTourModal'),
+                ajax: {
+                    url: '/Admin/SearchDestinations', // Sửa thành Admin thay vì Destination
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            searchTerm: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {
+                                    id: item.destinationId,
+                                    text: item.name + " - " + item.city + ", " + item.country
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
         });
-    });
-</script>
-
-
-
-
-
-
+    </script>
+}

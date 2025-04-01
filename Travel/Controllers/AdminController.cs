@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
@@ -237,7 +238,16 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, DateTime.UtcNow.AddYears(100));
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTime.UtcNow.AddYears(100);
+            user.IsActive = false; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
 
@@ -247,9 +257,18 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, null);
+            user.LockoutEnd = null;
+            user.IsActive = true; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể mở khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
+
 
         // Quản lý Tour
         public async Task<IActionResult> ManageTours()
@@ -291,12 +310,21 @@ namespace Travel.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            var destinations = await _unitOfWork.Destinations.GetAllAsync();
+
             var viewModel = new TourViewModel
             {
-                DestinationOptions = await _unitOfWork.Destinations.GetAllAsync()
+                // Chuyển đổi danh sách Destination thành SelectListItem
+                DestinationOptions = destinations.Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = d.Name
+                }).ToList()
             };
+
             return View(viewModel);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -329,13 +357,23 @@ namespace Travel.Controllers
                 }
 
                 // Nếu có lỗi validation, load lại danh sách điểm đến
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
                 return View(model);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Error creating tour: " + ex.Message);
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
                 return View(model);
             }
         }
@@ -441,6 +479,7 @@ namespace Travel.Controllers
                 return RedirectToAction("ManageTours");
             }
         }
+
         // Quản lý đặt tour
         public async Task<IActionResult> ManageBookings()
         {

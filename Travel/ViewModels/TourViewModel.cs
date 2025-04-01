@@ -10,8 +10,8 @@ namespace Travel.ViewModels
         public string DestinationName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public decimal Price { get; set; }
-        public string StartDate { get; set; } = string.Empty;
-        public string EndDate { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         public int AvailableSeats { get; set; }
         public string TourType { get; set; } = string.Empty;
         public string TourStatus { get; set; } = string.Empty;

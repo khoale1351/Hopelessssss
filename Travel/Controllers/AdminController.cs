@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
@@ -309,12 +310,21 @@ namespace Travel.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            var destinations = await _unitOfWork.Destinations.GetAllAsync();
+
             var viewModel = new TourViewModel
             {
-                DestinationOptions = await _unitOfWork.Destinations.GetAllAsync()
+                // Chuyển đổi danh sách Destination thành SelectListItem
+                DestinationOptions = destinations.Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = d.Name
+                }).ToList()
             };
+
             return View(viewModel);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -347,13 +357,23 @@ namespace Travel.Controllers
                 }
 
                 // Nếu có lỗi validation, load lại danh sách điểm đến
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
                 return View(model);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Error creating tour: " + ex.Message);
-                model.DestinationOptions = await _unitOfWork.Destinations.GetAllAsync();
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
                 return View(model);
             }
         }
@@ -459,6 +479,7 @@ namespace Travel.Controllers
                 return RedirectToAction("ManageTours");
             }
         }
+
         // Quản lý đặt tour
         public async Task<IActionResult> ManageBookings()
         {
@@ -569,12 +590,5 @@ namespace Travel.Controllers
             }
             return RedirectToAction(nameof(ManageVouchers));
         }
-
-        public IActionResult TEST()
-        {
-            return View();
-        }
-
-
     }
 }

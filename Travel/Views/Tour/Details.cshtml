@@ -1,20 +1,46 @@
-@model Travel.ViewModels.TourViewModel
+@* Views/Tour/Details.cshtml *@
+@model Travel.Models.Tour
+
 @{
-    ViewData["Title"] = "Chi tiết Tour";
+    ViewData["Title"] = "Chi tiết Tour - " + Model.TourName;
 }
-<div class="card my-4">
-    <div class="card-header bg-primary text-white">
-        <h4>@Model.TourName</h4>
-    </div>
-    <div class="card-body">
-        <p><strong>Điểm Đến:</strong> @Model.DestinationName</p>
-        <p><strong>Mô Tả:</strong> @Model.Description</p>
-        <p><strong>Giá:</strong> @Model.Price.ToString("C")</p>
-        <p><strong>Ngày Bắt Đầu:</strong> @Model.StartDate</p>
-        <p><strong>Ngày Kết Thúc:</strong> @Model.EndDate</p>
-        <p><strong>Loại Tour:</strong> @Model.TourType</p>
-        <p><strong>Trạng Thái:</strong> @Model.TourStatus</p>
-        <a class="btn btn-secondary" href="@Url.Action("Index")">Quay lại</a>
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">@Model.TourName</h1>
+    <div class="row">
+        <!-- Hình ảnh tour -->
+        <div class="col-md-6">
+            <img src="@Model.ImageUrl" class="img-fluid rounded" alt="@Model.TourName" style="max-height: 400px; object-fit: cover;" onerror="this.src='/images/default-tour.jpg';">
+        </div>
+        <!-- Thông tin chi tiết tour -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4>Thông tin Tour</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Điểm Đến:</strong> @Model.Destination?.Name</p>
+                    <p><strong>Mô Tả:</strong> @Model.Description</p>
+                    <p><strong>Giá:</strong> @Model.Price.ToString("C")</p>
+                    <p><strong>Thời Gian:</strong> @Model.Duration ngày</p>
+                    <p><strong>Ngày Bắt Đầu:</strong> @Model.StartDate.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Ngày Kết Thúc:</strong> @Model.EndDate.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Số Ghế Còn Lại:</strong> @Model.AvailableSeats</p>
+                    <p><strong>Loại Tour:</strong> @Model.TourType</p>
+                    <p><strong>Trạng Thái:</strong> @Model.TourStatus</p>
+                    <!-- Nút đặt tour -->
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a href="@Url.Action("Create", "Booking", new { tourId = Model.TourId })" class="btn btn-primary">Đặt Tour Ngay</a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Login", "Account")" class="btn btn-primary">Đăng Nhập để Đặt Tour</a>
+                    }
+                    <a class="btn btn-secondary ms-2" href="@Url.Action("Book", "Tour")">Quay Lại</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

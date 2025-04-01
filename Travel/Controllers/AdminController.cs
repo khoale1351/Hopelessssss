@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Travel.Models;
 using Travel.Models.ViewModels;
@@ -101,7 +104,7 @@ namespace Travel.Controllers
                 searchQuery = searchQuery.ToLower();
                 users = users.Where(u =>
                     u.FullName.ToLower().Contains(searchQuery) ||
-                    u.Email.ToLower().Contains(searchQuery))
+                    u.Email != null && u.Email.ToLower().Contains(searchQuery))
                     .ToList();
             }
 
@@ -119,56 +122,118 @@ namespace Travel.Controllers
 
         public IActionResult CreateUser()
         {
+            var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            ViewBag.Roles = new SelectList(roles);
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser(ApplicationUser model, string password)
+        public async Task<IActionResult> CreateUser(UserViewModel model, string Role)
         {
-            if (ModelState.IsValid)
+            // Kiểm tra dữ liệu đầu vào
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    var user = new ApplicationUser
-                    {
-                        UserName = model.Email,
-                        Email = model.Email,
-                        FullName = model.FullName,
-                        PhoneNumber = model.PhoneNumber,
-                        DateOfBirth = model.DateOfBirth,
-                        Address = model.Address,
-                        MembershipType = model.MembershipType,
-                        Status = model.Status,
-                        IsActive = model.IsActive,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    var result = await _userManager.CreateAsync(user, password);
-
-                    if (result.Succeeded)
-                    {
-                        // Gán role mặc định (ví dụ: "Customer")
-                        await _userManager.AddToRoleAsync(user, "Customer");
-
-                        TempData["SuccessMessage"] = "Thêm người dùng thành công!";
-                        return RedirectToAction("ManageUsers");
-                    }
-
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Lỗi khi thêm người dùng: " + ex.Message);
-                }
+                return View(model);
             }
 
-            // Nếu có lỗi, hiển thị lại form với thông báo lỗi
+            // 🔹 Kiểm tra Email hợp lệ
+            if (!new EmailAddressAttribute().IsValid(model.Email))
+            {
+                ModelState.AddModelError("Email", "Email không hợp lệ.");
+                return View(model);
+            }
+
+            // 🔹 Kiểm tra số điện thoại hợp lệ (10-11 chữ số, bắt đầu bằng 0)
+            if (!Regex.IsMatch(model.PhoneNumber, @"^0\d{9,10}$"))
+            {
+                ModelState.AddModelError("PhoneNumber", "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.");
+                return View(model);
+            }
+
+            // 🔹 Kiểm tra ngày sinh hợp lệ
+            if (!model.DateOfBirth.HasValue)
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh là bắt buộc.");
+                return View(model);
+            }
+
+            DateTime today = DateTime.Today;
+            int age = today.Year - model.DateOfBirth.Value.Year;
+            if (model.DateOfBirth.Value.Date > today.AddYears(-age)) age--;
+
+            if (age < 18)
+            {
+                ModelState.AddModelError("DateOfBirth", "Người dùng phải từ 18 tuổi trở lên.");
+                return View(model);
+            }
+            if (age > 100)
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ.");
+                return View(model);
+            }
+
+            // 🔹 Kiểm tra mật khẩu (chỉ cần tối thiểu 8 ký tự)
+            if (string.IsNullOrEmpty(model.Password) || model.Password.Length < 8)
+            {
+                ModelState.AddModelError("Password", "Mật khẩu phải có ít nhất 8 ký tự.");
+                return View(model);
+            }
+
+            try
+            {
+                // Tạo đối tượng người dùng từ model
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    PhoneNumber = model.PhoneNumber,
+                    DateOfBirth = model.DateOfBirth,
+                    Address = model.Address,
+                    MembershipType = model.MembershipType,
+                    Status = model.Status,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                // Tạo tài khoản người dùng với mật khẩu
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    // Gán role cho người dùng
+                    if (!string.IsNullOrEmpty(Role))
+                    {
+                        if (!await _roleManager.RoleExistsAsync(Role))
+                        {
+                            await _roleManager.CreateAsync(new IdentityRole(Role));
+                        }
+                        await _userManager.AddToRoleAsync(user, Role);
+                    }
+                    else
+                    {
+                        // Nếu không chọn role, gán role mặc định
+                        const string defaultRole = "Customer";
+                        await _userManager.AddToRoleAsync(user, defaultRole);
+                    }
+
+                    TempData["SuccessMessage"] = "Thêm người dùng thành công!";
+                    return RedirectToAction("ManageUsers");
+                }
+
+                // Xử lý lỗi khi tạo tài khoản
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Lỗi khi thêm người dùng: " + ex.Message);
+            }
+
             return View(model);
         }
-
 
         public async Task<IActionResult> EditUser(string id)
         {
@@ -258,7 +323,7 @@ namespace Travel.Controllers
             if (user == null) return NotFound();
 
             user.LockoutEnd = null;
-            user.IsActive = true; // Cập nhật trạng thái người dùng
+            user.IsActive = true; 
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)

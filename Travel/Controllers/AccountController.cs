@@ -38,24 +38,26 @@ namespace Travel.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+                ModelState.AddModelError("Email", "Email này không tồn tại.");
                 return View(model);
             }
 
             if (!user.IsActive)
             {
-                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa.");
+                ModelState.AddModelError("Email", "Tài khoản của bạn đã bị khóa.");
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure:true);
-            if (result.Succeeded)
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: true);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("Password", "Mật khẩu không đúng.");
+                return View(model);
+            }
+            else
             {
                 return RedirectToAction("Index", "Home");
             }
-
-            ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
-            return View(model);
         }
 
         // Hiển thị trang đăng ký
@@ -88,9 +90,28 @@ namespace Travel.Controllers
             }
 
             // Kiểm tra ngày sinh hợp lệ
-            if (model.DateOfBirth > DateTime.Today)
+            if (model.DateOfBirth.HasValue)
             {
-                ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ.");
+                DateTime today = DateTime.Today;
+                int age = today.Year - model.DateOfBirth.Value.Year;
+
+                if (model.DateOfBirth.Value.Date > today.AddYears(-age)) // Chưa đến sinh nhật năm nay
+                {
+                    age--;
+                }
+
+                if (age < 18)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Bạn phải đủ 18 tuổi để đăng ký.");
+                }
+                else if (age > 100)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ.");
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("DateOfBirth", "Vui lòng nhập ngày sinh.");
             }
 
             var user = new ApplicationUser

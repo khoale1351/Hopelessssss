@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Travel.Models;
 using Travel.Models.ViewModels;
 using Travel.Repositories;
+using Travel.ViewModels;
 
 namespace Travel.Controllers
 {
@@ -236,7 +238,16 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, DateTime.UtcNow.AddYears(100));
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTime.UtcNow.AddYears(100);
+            user.IsActive = false; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
 
@@ -246,9 +257,18 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            await _userManager.SetLockoutEndDateAsync(user, null);
+            user.LockoutEnd = null;
+            user.IsActive = true; // Cập nhật trạng thái người dùng
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Không thể mở khóa tài khoản.");
+            }
+
             return RedirectToAction("ManageUsers");
         }
+
 
         // Quản lý Tour
         public async Task<IActionResult> ManageTours()
@@ -259,35 +279,110 @@ namespace Travel.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchDestinations(string searchTerm)
         {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return Json(new List<object>());
+            }
+
             try
             {
-                // Lấy danh sách điểm đến phù hợp với từ khóa tìm kiếm
                 var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
-                var filteredDestinations = destinations
-                    .Where(d =>
-                        d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                var results = destinations
+                    .Where(d => d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .GroupBy(d => new { d.Name, d.City, d.Country }) // Nhóm theo các thuộc tính
+                    .Select(g => g.First()) // Lấy bản ghi đầu tiên của mỗi nhóm
+                    .Take(10) // Giới hạn kết quả
                     .Select(d => new
                     {
-                        destinationId = d.DestinationId,
+                        id = d.DestinationId,
+                        text = $"{d.Name} ({d.City}, {d.Country})", // Format hiển thị
                         name = d.Name,
-                        city = d.City,  // Sửa thành City
-                        country = d.Country // Sửa thành Country
+                        city = d.City,
+                        country = d.Country
                     })
                     .ToList();
 
-                return Json(filteredDestinations); // Sửa tên biến
+                return Json(results);
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi nếu cần
-                return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+                // Log error
+                return StatusCode(500, new { error = "Lỗi khi tải điểm đến" });
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
+            var viewModel = new TourViewModel
+            {
+                // Chuyển đổi danh sách Destination thành SelectListItem
+                DestinationOptions = destinations.Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = d.Name
+                }).ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(TourViewModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var newTour = new Tour
+                    {
+                        TourName = model.TourName,
+                        Description = model.Description,
+                        Price = model.Price,
+                        Duration = model.Duration,
+                        StartDate = model.StartDate,
+                        EndDate = model.EndDate,
+                        AvailableSeats = model.AvailableSeats,
+                        TourType = model.TourType,
+                        TourStatus = model.TourStatus,
+                        DestinationId = model.DestinationId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.Tours.AddAsync(newTour);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Tour created successfully!";
+                    return RedirectToAction("Index");
+                }
+
+                // Nếu có lỗi validation, load lại danh sách điểm đến
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error creating tour: " + ex.Message);
+                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DestinationId.ToString(),
+                        Text = d.Name
+                    }).ToList();
+                return View(model);
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetTourDetails(int id)
@@ -390,6 +485,7 @@ namespace Travel.Controllers
                 return RedirectToAction("ManageTours");
             }
         }
+
         // Quản lý đặt tour
         public async Task<IActionResult> ManageBookings()
         {

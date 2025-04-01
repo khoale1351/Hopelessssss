@@ -302,37 +302,87 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Khởi tạo Select2 cho modal thêm tour
-            $('#destinationDropdown').select2({
-                placeholder: "Nhập tên điểm đến...",
-                allowClear: true,
-                width: '100%',
-                dropdownParent: $('#addTourModal'),
-                ajax: {
-                    url: '/Admin/SearchDestinations',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            searchTerm: params.term
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: $.map(data, function (item) {
+                    // Khởi tạo Select2 với cả dữ liệu có sẵn và chức năng thêm mới
+                    $('#destinationDropdown').select2({
+                        tags: true, // Cho phép thêm mới
+                        placeholder: "Nhập tên điểm đến hoặc chọn từ danh sách...",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#addTourModal'),
+                        ajax: {
+                            url: '/Admin/SearchDestinations',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
                                 return {
-                                    id: item.destinationId,
-                                    text: item.name + " - " + item.city + ", " + item.country
+                                    searchTerm: params.term
                                 };
-                            })
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1
-            });
+                            },
+                            processResults: function (data) {
+                                // Chuyển đổi dữ liệu từ API
+                                var results = data.map(function(item) {
+                                    return {
+                                        id: item.destinationId,
+                                        text: item.name + (item.city ? ' - ' + item.city : '') + (item.country ? ', ' + item.country : '')
+                                    };
+                                });
 
-            // Xử lý modal xem chi tiết
+                                return {
+                                    results: results,
+                                    pagination: {
+                                        more: false
+                                    }
+                                };
+                            },
+                            cache: true
+                        },
+                        minimumInputLength: 1,
+                        createTag: function (params) {
+                            // Kiểm tra input không trống
+                            var term = $.trim(params.term);
+                            if (term === '') {
+                                return null;
+                            }
+
+                            return {
+                                id: 'NEW_' + term, // Đánh dấu là mới
+                                text: term + ' (Thêm mới)',
+                                isNew: true
+                            };
+                        },
+                        templateResult: function (data) {
+                            // Hiển thị khác cho item mới
+                            if (data.isNew) {
+                                return $('<span><i class="fas fa-plus-circle text-success mr-1"></i>' + data.text + '</span>');
+                            }
+                            return data.text;
+                        },
+                        templateSelection: function (data) {
+                            // Khi đã chọn thì bỏ phần "(Thêm mới)"
+                            if (data.isNew) {
+                                return data.text.replace(' (Thêm mới)', '');
+                            }
+                            return data.text;
+                        }
+                    });
+
+                    // Xử lý khi submit form
+                    $('#addTourForm').on('submit', function(e) {
+                        var destinationValue = $('#destinationDropdown').val();
+
+                        // Nếu là điểm đến mới
+                        if (typeof destinationValue === 'string' && destinationValue.startsWith('NEW_')) {
+                            var newDestinationName = destinationValue.replace('NEW_', '');
+
+                            // Thêm input ẩn chứa tên điểm đến mới
+                            $(this).append('<input type="hidden" name="NewDestinationName" value="' + newDestinationName + '">');
+
+                            // Xóa giá trị select2 để không gửi ID không hợp lệ
+                            $('#destinationDropdown').val(null).trigger('change');
+                        }
+                    });
+
+            // xem chi tiết
             $('#detailTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
@@ -345,8 +395,7 @@
                         $('#detailTourContent').html('<div class="alert alert-danger">Không thể tải thông tin tour</div>');
                     });
             });
-
-            // Xử lý modal chỉnh sửa
+            //Chỉnh sửa
             $('#editTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
@@ -354,8 +403,6 @@
                 $.get('/Admin/GetEditTourForm/' + tourId)
                     .done(function(data) {
                         $('#editTourContent').html(data);
-
-                        // Khởi tạo select2 cho dropdown điểm đến trong modal chỉnh sửa
                         $('select[name="DestinationId"]').select2({
                             placeholder: "Chọn điểm đến...",
                             width: '100%',
@@ -367,12 +414,9 @@
                     });
             });
 
-            // Xử lý submit form chỉnh sửa
             $(document).on('submit', '#editTourForm', function(e) {
                 e.preventDefault();
-
                 var formData = new FormData(this);
-
                 $.ajax({
                     url: '/Admin/EditTour',
                     type: 'POST',
@@ -389,12 +433,10 @@
                     }
                 });
             });
-
-            // Xử lý xóa tour
+            //Xoá
             $('.delete-btn').click(function () {
                 var tourId = $(this).data('id');
                 var tourName = $(this).data('name');
-
                 $('#tourNameToDelete').text(tourName);
                 $('#deleteForm').attr('action', '/Admin/DeleteTour/' + tourId);
                 $('#deleteConfirmModal').modal('show');

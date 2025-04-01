@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿// ViewModels/TourViewModel.cs
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Travel.ViewModels
 {

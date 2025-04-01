@@ -1,0 +1,40 @@
+﻿@* Views/Booking/BookingConfirmation.cshtml *@
+@model Travel.Models.Booking
+
+@{
+    ViewData["Title"] = "Xác Nhận Đặt Tour";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">Xác Nhận Đặt Tour</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4>Đặt Tour Thành Công</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tour:</strong> @Model.Tour.TourName</p>
+                    <p><strong>Điểm Đến:</strong> @Model.Tour.Destination?.Name</p>
+                    <p><strong>Ngày Đặt:</strong> @Model.BookingDate.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Ngày Khởi Hành:</strong> @Model.StartDate.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Số Người Lớn:</strong> @Model.NumberOfAdults</p>
+                    <p><strong>Số Trẻ Em:</strong> @Model.NumberOfChildren</p>
+                    @if (Model.VoucherID.HasValue)
+                    {
+                        <p><strong>Voucher:</strong> @Model.Voucher?.Code</p>
+                        @if (Model.DiscountPercentageApplied.HasValue)
+                        {
+                            <p><strong>Giảm Giá (%):</strong> @Model.DiscountPercentageApplied%</p>
+                        }
+                        <p><strong>Số Tiền Giảm:</strong> @Model.DiscountAmountApplied?.ToString("C")</p>
+                    }
+                    <p><strong>Tổng Giá:</strong> @Model.TotalPrice.ToString("C")</p>
+                    <a href="@Url.Action("Index", "Booking")" class="btn btn-primary w-100">Xem Danh Sách Booking</a>
+                    <a href="@Url.Action("Book", "Tour")" class="btn btn-secondary w-100 mt-2">Xem Các Tour Khác</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

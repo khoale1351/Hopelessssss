@@ -1,0 +1,62 @@
+﻿@* Views/Booking/Index.cshtml *@
+@model IEnumerable<Travel.Models.Booking>
+
+@{
+    ViewData["Title"] = "Danh Sách Booking";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">Danh Sách Booking</h1>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["Error"]
+        </div>
+    }
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var booking in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@booking.Tour.TourName</h5>
+                            <p class="card-text"><strong>Điểm Đến:</strong> @booking.Tour.Destination?.Name</p>
+                            <p class="card-text"><strong>Ngày Đặt:</strong> @booking.BookingDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="card-text"><strong>Ngày Khởi Hành:</strong> @booking.StartDate.ToString("dd/MM/yyyy")</p>
+                            <p class="card-text"><strong>Số Người Lớn:</strong> @booking.NumberOfAdults</p>
+                            <p class="card-text"><strong>Số Trẻ Em:</strong> @booking.NumberOfChildren</p>
+                            <p class="card-text"><strong>Tổng Giá:</strong> @booking.TotalPrice.ToString("C")</p>
+                            <p class="card-text"><strong>Trạng Thái:</strong> @booking.Status</p>
+                            @if (booking.VoucherID.HasValue)
+                            {
+                                <p class="card-text"><strong>Voucher:</strong> @booking.Voucher?.Code</p>
+                                <p class="card-text"><strong>Số Tiền Giảm:</strong> @booking.DiscountAmountApplied?.ToString("C")</p>
+                            }
+                            <a href="@Url.Action("Details", "Booking", new { id = booking.BookingId })" class="btn btn-primary">Xem Chi Tiết</a>
+                            @if (booking.Status == "Pending")
+                            {
+                                <a href="@Url.Action("Cancel", "Booking", new { id = booking.BookingId })" class="btn btn-danger mt-2" onclick="return confirm('Bạn có chắc chắn muốn hủy booking này?');">Hủy Booking</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <p class="text-muted">Bạn chưa có booking nào.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log("Booking Index page loaded!");
+        });
+    </script>
+}

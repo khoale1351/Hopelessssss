@@ -1,0 +1,49 @@
+﻿@* Views/Booking/Details.cshtml *@
+@model Travel.Models.Booking
+
+@{
+    ViewData["Title"] = "Chi Tiết Booking";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">Chi Tiết Booking</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4>Thông tin Booking</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tour:</strong> @Model.Tour.TourName</p>
+                    <p><strong>Điểm Đến:</strong> @Model.Tour.Destination?.Name</p>
+                    <p><strong>Người Đặt:</strong> @Model.User.UserName</p>
+                    <p><strong>Ngày Đặt:</strong> @Model.BookingDate.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Ngày Khởi Hành:</strong> @Model.StartDate.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Số Người Lớn:</strong> @Model.NumberOfAdults</p>
+                    <p><strong>Số Trẻ Em:</strong> @Model.NumberOfChildren</p>
+                    @if (Model.VoucherID.HasValue)
+                    {
+                        <p><strong>Voucher:</strong> @Model.Voucher?.Code</p>
+                        @if (Model.DiscountPercentageApplied.HasValue)
+                        {
+                            <p><strong>Giảm Giá (%):</strong> @Model.DiscountPercentageApplied%</p>
+                        }
+                        <p><strong>Số Tiền Giảm:</strong> @Model.DiscountAmountApplied?.ToString("C")</p>
+                    }
+                    <p><strong>Tổng Giá:</strong> @Model.TotalPrice.ToString("C")</p>
+                    <p><strong>Trạng Thái:</strong> @Model.Status</p>
+                    <p><strong>Trạng Thái Thanh Toán:</strong> @Model.PaymentStatus</p>
+                    <a href="@Url.Action("Index", "Booking")" class="btn btn-secondary w-100">Quay Lại</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log("Booking Details page loaded!");
+        });
+    </script>
+}

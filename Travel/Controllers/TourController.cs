@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Travel.Data;
 using Travel.Models;
 using Travel.Repositories;
@@ -37,6 +38,7 @@ public class TourController : Controller
         return View(tourViewModels);
     }
 
+
     [Authorize(Roles = "Admin,Manager")]
     [HttpGet]
     public IActionResult Create()
@@ -54,6 +56,34 @@ public class TourController : Controller
 
         return View(model);
     }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Book()
+    {
+        var tours = await _context.Tours
+            .Include(t => t.Destination)
+            .Where(t => t.TourStatus == "Upcoming" && t.AvailableSeats > 0)
+            .ToListAsync();
+
+        return View(tours);
+    }
+
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(int id)
+    {
+        var tour = await _context.Tours
+            .Include(t => t.Destination)
+            .FirstOrDefaultAsync(t => t.TourId == id);
+
+        if (tour == null)
+        {
+            return NotFound();
+        }
+
+        return View(tour);
+    }
+
 
     // POST: Tour/Create
     [HttpPost]

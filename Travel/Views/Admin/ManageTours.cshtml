@@ -109,68 +109,61 @@
                 <h5 class="modal-title">Thêm Tour Mới</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <form asp-action="Create" asp-controller="Admin" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Tên Tour</label>
-                            <input type="text" class="form-control" name="TourName" required>
+                            <label class="form-label" for="TourName">Tên Tour</label>
+                            <input type="text" class="form-control" id="TourName" name="TourName" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Điểm đến</label>
+                            <label class="form-label" for="destinationDropdown">Điểm đến</label>
                             <select class="form-control select2-destination" name="DestinationId" id="destinationDropdown" required>
-                                <option value="">Tìm kiếm điểm đến...</option>
-                                @if (ViewBag.Destinations != null)
-                                {
-                                    foreach (var destination in ViewBag.Destinations)
-                                    {
-                                        <option value="@destination.DestinationId">@destination.Name - @destination.City, @destination.Country</option>
-                                    }
-                                }
+                                <option value="" disabled selected>Tìm kiếm điểm đến...</option>
                             </select>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-12">
-                            <label class="form-label">Mô tả</label>
-                            <textarea class="form-control" name="Description" rows="3"></textarea>
+                            <label class="form-label" for="Description">Mô tả</label>
+                            <textarea class="form-control" id="Description" name="Description" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Giá (VNĐ)</label>
-                            <input type="number" class="form-control" name="Price" min="0" required>
+                            <label class="form-label" for="Price">Giá (VNĐ)</label>
+                            <input type="number" class="form-control" id="Price" name="Price" min="0" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Thời gian (ngày)</label>
-                            <input type="number" class="form-control" name="Duration" min="1" required>
+                            <label class="form-label" for="Duration">Thời gian (ngày)</label>
+                            <input type="number" class="form-control" id="Duration" name="Duration" min="1" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Số chỗ</label>
-                            <input type="number" class="form-control" name="AvailableSeats" min="0" required>
+                            <label class="form-label" for="AvailableSeats">Số chỗ</label>
+                            <input type="number" class="form-control" id="AvailableSeats" name="AvailableSeats" min="0" required>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Ngày bắt đầu</label>
-                            <input type="date" class="form-control" name="StartDate" required>
+                            <label class="form-label" for="StartDate">Ngày bắt đầu</label>
+                            <input type="date" class="form-control" id="StartDate" name="StartDate" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Ngày kết thúc</label>
-                            <input type="date" class="form-control" name="EndDate" required>
+                            <label class="form-label" for="EndDate">Ngày kết thúc</label>
+                            <input type="date" class="form-control" id="EndDate" name="EndDate" required>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Loại Tour</label>
-                            <select class="form-select" name="TourType" required>
+                            <label class="form-label" for="TourType">Loại Tour</label>
+                            <select class="form-select" id="TourType" name="TourType" required>
                                 <option value="Private">Tour riêng</option>
                                 <option value="Group">Tour nhóm</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Trạng thái</label>
-                            <select class="form-select" name="TourStatus" required>
+                            <label class="form-label" for="TourStatus">Trạng thái</label>
+                            <select class="form-select" id="TourStatus" name="TourStatus" required>
                                 <option value="Upcoming">Sắp diễn ra</option>
                                 <option value="Ongoing">Đang diễn ra</option>
                                 <option value="Completed">Đã hoàn thành</option>
@@ -179,8 +172,8 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Hình ảnh</label>
-                        <input class="form-control" type="file" name="ImageFile" accept="image/*">
+                        <label class="form-label" for="ImageFile">Hình ảnh</label>
+                        <input class="form-control" type="file" id="ImageFile" name="ImageFile" accept="image/*">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -245,14 +238,15 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post">
+                <form id="deleteForm" method="post" asp-controller="Admin" asp-action="DeleteTour">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteTourId" />
                     <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
 @functions {
     string GetStatusBadgeClass(string status)
     {
@@ -302,91 +296,73 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-                    // Khởi tạo Select2 với cả dữ liệu có sẵn và chức năng thêm mới
-                    $('#destinationDropdown').select2({
-                        tags: true, // Cho phép thêm mới
-                        placeholder: "Nhập tên điểm đến hoặc chọn từ danh sách...",
-                        allowClear: true,
-                        width: '100%',
-                        dropdownParent: $('#addTourModal'),
-                        ajax: {
-                            url: '/Admin/SearchDestinations',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function (params) {
-                                return {
-                                    searchTerm: params.term
-                                };
-                            },
-                            processResults: function (data) {
-                                // Chuyển đổi dữ liệu từ API
-                                var results = data.map(function(item) {
-                                    return {
-                                        id: item.destinationId,
-                                        text: item.name + (item.city ? ' - ' + item.city : '') + (item.country ? ', ' + item.country : '')
-                                    };
-                                });
+            // Kiểm tra jQuery và Select2
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Select2 loaded:', typeof $.fn.select2 !== 'undefined');
 
-                                return {
-                                    results: results,
-                                    pagination: {
-                                        more: false
-                                    }
-                                };
-                            },
-                            cache: true
-                        },
-                        minimumInputLength: 1,
-                        createTag: function (params) {
-                            // Kiểm tra input không trống
-                            var term = $.trim(params.term);
-                            if (term === '') {
+            // Khởi tạo Select2
+            $('#destinationDropdown').select2({
+                placeholder: "Nhập tên điểm đến hoặc chọn từ danh sách...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#addTourModal'),
+                ajax: {
+                    url: '/Admin/SearchDestinations',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        console.log('Gửi yêu cầu AJAX với searchTerm:', params.term || '');
+                        return {
+                            searchTerm: params.term || ''
+                        };
+                    },
+                    processResults: function (data) {
+                        console.log('Dữ liệu trả về từ SearchDestinations:', data);
+                        if (!Array.isArray(data)) {
+                            console.error('Dữ liệu không phải là mảng:', data);
+                            return { results: [] };
+                        }
+                        var results = data.map(function(item) {
+                            if (!item.destinationId || !item.name) {
+                                console.warn('Dữ liệu không hợp lệ:', item);
                                 return null;
                             }
-
                             return {
-                                id: 'NEW_' + term, // Đánh dấu là mới
-                                text: term + ' (Thêm mới)',
-                                isNew: true
+                                id: item.destinationId,
+                                text: item.name + (item.city ? ' - ' + item.city : '') + (item.country ? ', ' + item.country : '')
                             };
-                        },
-                        templateResult: function (data) {
-                            // Hiển thị khác cho item mới
-                            if (data.isNew) {
-                                return $('<span><i class="fas fa-plus-circle text-success mr-1"></i>' + data.text + '</span>');
+                        }).filter(item => item !== null);
+                        return {
+                            results: results,
+                            pagination: {
+                                more: false
                             }
-                            return data.text;
-                        },
-                        templateSelection: function (data) {
-                            // Khi đã chọn thì bỏ phần "(Thêm mới)"
-                            if (data.isNew) {
-                                return data.text.replace(' (Thêm mới)', '');
-                            }
-                            return data.text;
-                        }
-                    });
+                        };
+                    },
+                    cache: true,
+                    error: function (xhr, status, error) {
+                        console.error('Lỗi khi gọi SearchDestinations:', xhr.status, error);
+                    }
+                },
+                minimumInputLength: 0,
+                templateResult: function (data) {
+                    return data.text;
+                },
+                templateSelection: function (data) {
+                    return data.text;
+                }
+            });
 
-                    // Xử lý khi submit form
-                    $('#addTourForm').on('submit', function(e) {
-                        var destinationValue = $('#destinationDropdown').val();
+            // Tự động mở dropdown với dữ liệu khi bấm vào
+            $('#destinationDropdown').on('select2:open', function () {
+                console.log('Mở dropdown');
+                $(this).data('select2').trigger('query', { term: '' });
+            });
 
-                        // Nếu là điểm đến mới
-                        if (typeof destinationValue === 'string' && destinationValue.startsWith('NEW_')) {
-                            var newDestinationName = destinationValue.replace('NEW_', '');
-
-                            // Thêm input ẩn chứa tên điểm đến mới
-                            $(this).append('<input type="hidden" name="NewDestinationName" value="' + newDestinationName + '">');
-
-                            // Xóa giá trị select2 để không gửi ID không hợp lệ
-                            $('#destinationDropdown').val(null).trigger('change');
-                        }
-                    });
-
-            // xem chi tiết
+            // Xem chi tiết
             $('#detailTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
-
                 $.get('/Admin/GetTourDetails/' + tourId)
                     .done(function(data) {
                         $('#detailTourContent').html(data);
@@ -395,11 +371,11 @@
                         $('#detailTourContent').html('<div class="alert alert-danger">Không thể tải thông tin tour</div>');
                     });
             });
-            //Chỉnh sửa
+
+            // Chỉnh sửa
             $('#editTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
-
                 $.get('/Admin/GetEditTourForm/' + tourId)
                     .done(function(data) {
                         $('#editTourContent').html(data);
@@ -433,14 +409,46 @@
                     }
                 });
             });
-            //Xoá
-            $('.delete-btn').click(function () {
-                var tourId = $(this).data('id');
-                var tourName = $(this).data('name');
-                $('#tourNameToDelete').text(tourName);
-                $('#deleteForm').attr('action', '/Admin/DeleteTour/' + tourId);
-                $('#deleteConfirmModal').modal('show');
+
+                    // Xóa
+        $('.delete-btn').click(function () {
+            var tourId = $(this).data('id');
+            var tourName = $(this).data('name');
+            $('#tourNameToDelete').text(tourName);
+            $('#deleteTourId').val(tourId);
+            $('#deleteConfirmModal').modal('show');
+        });
+
+        $('#deleteForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                url: '/Admin/DeleteTour',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('#deleteConfirmModal').modal('hide');
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        }
+                    } else {
+                        $('#deleteConfirmModal .modal-body').prepend(
+                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                            response.message +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    $('#deleteConfirmModal .modal-body').prepend(
+                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        'Lỗi khi xóa tour: ' + xhr.responseText +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+                    );
+                }
             });
+        });
         });
     </script>
 }

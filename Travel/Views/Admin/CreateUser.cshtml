@@ -1,5 +1,6 @@
 ﻿@model Travel.Models.ApplicationUser
-
+@using Microsoft.EntityFrameworkCore
+@inject Microsoft.AspNetCore.Identity.RoleManager<IdentityRole> RoleManager
 @{
     ViewData["Title"] = "Thêm Người Dùng";
     Layout = "_LayoutAdmin";
@@ -12,7 +13,9 @@
     <!-- Form thêm người dùng -->
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <form asp-controller="Admin" asp-action="CreateUser" method="post" class="card p-4 shadow-lg">
+            <form asp-controller="Admin" asp-action="CreateUser" method="post" class="card p-4 shadow-lg needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+
                 <!-- FullName -->
                 <div class="mb-3">
                     <label asp-for="FullName" class="form-label">Họ và tên</label>
@@ -30,28 +33,28 @@
                 <!-- Password -->
                 <div class="mb-3">
                     <label for="password" class="form-label">Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" required />
+                    <input type="password" name="password" class="form-control" required minlength="8" />
                     <span class="text-danger">@(ViewData.ModelState["password"]?.Errors.FirstOrDefault()?.ErrorMessage)</span>
                 </div>
 
                 <!-- PhoneNumber -->
                 <div class="mb-3">
                     <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
-                    <input asp-for="PhoneNumber" class="form-control" type="tel" />
+                    <input asp-for="PhoneNumber" class="form-control" type="tel" pattern="^0\d{9,10}$" required />
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
 
                 <!-- DateOfBirth -->
                 <div class="mb-3">
                     <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
-                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <input asp-for="DateOfBirth" class="form-control" type="date" required />
                     <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                 </div>
 
                 <!-- Address -->
                 <div class="mb-3">
                     <label asp-for="Address" class="form-label">Địa chỉ</label>
-                    <input asp-for="Address" class="form-control" />
+                    <input asp-for="Address" class="form-control" required />
                     <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
 
@@ -59,6 +62,7 @@
                 <div class="mb-3">
                     <label asp-for="MembershipType" class="form-label">Loại thành viên</label>
                     <select asp-for="MembershipType" class="form-control" required>
+                        <option value="">-- Chọn loại thành viên --</option>
                         <option value="Silver">Silver</option>
                         <option value="Gold">Gold</option>
                         <option value="Platinum">Platinum</option>
@@ -66,22 +70,18 @@
                     <span asp-validation-for="MembershipType" class="text-danger"></span>
                 </div>
 
-                <!-- Status -->
-                <div class="mb-3">
-                    <label asp-for="Status" class="form-label">Trạng thái</label>
-                    <select asp-for="Status" class="form-control" required>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                <!-- Role -->
+                <div class="form-group">
+                    <label for="Role">Vai trò</label>
+                    <select id="Role" name="Role" class="form-control">
+                        @foreach (var role in await RoleManager.Roles.ToListAsync())
+                        {
+                            <option value="@role.Name">@role.Name</option>
+                        }
                     </select>
-                    <span asp-validation-for="Status" class="text-danger"></span>
                 </div>
 
-                <!-- IsActive -->
-                <div class="mb-3 form-check">
-                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                    <label asp-for="IsActive" class="form-check-label">Kích hoạt tài khoản</label>
-                    <span asp-validation-for="IsActive" class="text-danger"></span>
-                </div>
+
 
                 <!-- Nút Submit và Cancel -->
                 <div class="d-flex justify-content-between">
@@ -92,4 +92,28 @@
         </div>
     </div>
 </div>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
 
+
+<!-- Validation JS -->
+@section Scripts {
+    <script>
+        // Kích hoạt validation client-side
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

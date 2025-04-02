@@ -3,87 +3,110 @@
 @{
     ViewData["Title"] = "Quản lý Đặt Tour";
     Layout = "_LayoutAdmin";
+
 }
 
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Quản lý Đặt Tour</h1>
+<!-- Main Content -->
+<div class="container my-5">
+    <h2 class="mb-4">Quản lý Đặt Tour</h2>
 
-    <!-- Thông báo thành công -->
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Thanh tìm kiếm -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form asp-controller="Admin" asp-action="ManageBookings" method="get" class="d-flex">
+                <input type="text" name="searchQuery" class="form-control me-2" placeholder="Tìm kiếm theo tên người dùng hoặc tour..." value="@ViewBag.SearchQuery" />
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            </form>
         </div>
-    }
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fas fa-calendar-check me-1"></i>
-                Danh sách đặt tour
+
+        <!-- Bảng danh sách đặt tour -->
+        <div class="card shadow-lg">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-bookmark-fill me-2"></i>Danh sách Đặt Tour</h5>
             </div>
-            <a asp-action="Create" class="btn btn-light btn-sm">
-                <i class="fas fa-plus me-1"></i> Thêm mới
-            </a>
-        </div>
-
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered" id="bookingsTable">
+            <div class="card-body">
+                <table class="table table-striped table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>Mã đặt</th>
-                            <th>Khách hàng</th>
+                            <th>Booking ID</th>
+                            <th>Người dùng</th>
                             <th>Tour</th>
+                            <th>Số người lớn</th>
+                            <th>Số trẻ em</th>
+                            <th>Tổng giá</th>
                             <th>Ngày đặt</th>
-                            <th>Ngày đi</th>
-                            <th>Người lớn</th>
-                            <th>Trẻ em</th>
-                            <th>Tổng tiền</th>
                             <th>Trạng thái</th>
                             <th>Thanh toán</th>
+                            <th>Ngày bắt đầu</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td>@booking.BookingId</td>
+                                    <td>@(booking.User?.FullName ?? "N/A")</td>
+                                    <td>@(booking.Tour?.TourName ?? "N/A")</td>
+                                    <td>@booking.NumberOfAdults</td>
+                                    <td>@booking.NumberOfChildren</td>
+                                    <td>@booking.TotalPrice.ToString("C")</td>
+                                    <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @switch (booking.Status)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-warning">Chờ xử lý</span>
+                                                break;
+                                            case "Confirmed":
+                                                <span class="badge bg-success">Đã xác nhận</span>
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge bg-danger">Đã hủy</span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge bg-primary">Hoàn thành</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@booking.Status</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (booking.PaymentStatus)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-warning">Chưa thanh toán</span>
+                                                break;
+                                            case "Paid":
+                                                <span class="badge bg-success">Đã thanh toán</span>
+                                                break;
+                                            case "Refunded":
+                                                <span class="badge bg-info">Đã hoàn tiền</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@(booking.PaymentStatus ?? "N/A")</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>@booking.StartDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a asp-controller="Admin" asp-action="EditBooking" asp-route-id="@booking.BookingId" class="btn btn-warning btn-sm">Sửa</a>
+                                        <form asp-controller="Admin" asp-action="DeleteBooking" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@booking.BookingId" />
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa đặt tour này?')">Xóa</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>@item.BookingId</td>
-                                <td>@item.User.UserName</td>
-                                <td>@item.Tour?.TourName</td>
-                                <td>@item.BookingDate.ToString("dd/MM/yyyy")</td>
-                                <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
-                                <td>@item.NumberOfAdults</td>
-                                <td>@item.NumberOfChildren</td>
-                                <td>@item.TotalPrice.ToString("N0") VNĐ</td>
-                                <td>
-                                    <span class="badge @GetStatusBadgeClass(item.Status)">
-                                        @GetStatusDisplay(item.Status)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge @GetPaymentBadgeClass(item.PaymentStatus)">
-                                        @GetPaymentDisplay(item.PaymentStatus)
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a asp-action="Details" asp-route-id="@item.BookingId"
-                                           class="btn btn-info" title="Chi tiết">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@item.BookingId"
-                                           class="btn btn-warning" title="Sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-danger delete-btn"
-                                                data-id="@item.BookingId" title="Xóa">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                                <td colspan="11" class="text-center">Không có đặt tour nào.</td>
                             </tr>
                         }
                     </tbody>
@@ -91,93 +114,4 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal xác nhận xóa -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Bạn có chắc chắn muốn xóa đơn đặt tour này?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post">
-                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@functions {
-    string GetStatusBadgeClass(string status)
-    {
-        return status switch
-        {
-            "Pending" => "bg-secondary",
-            "Confirmed" => "bg-primary",
-            "Cancelled" => "bg-danger",
-            "Completed" => "bg-success",
-            _ => "bg-secondary"
-        };
-    }
-
-    string GetStatusDisplay(string status)
-    {
-        return status switch
-        {
-            "Pending" => "Chờ xác nhận",
-            "Confirmed" => "Đã xác nhận",
-            "Cancelled" => "Đã hủy",
-            "Completed" => "Hoàn thành",
-            _ => status
-        };
-    }
-
-    string GetPaymentBadgeClass(string status)
-    {
-        return status switch
-        {
-            "Pending" => "bg-warning",
-            "Paid" => "bg-success",
-            "Refunded" => "bg-info",
-            _ => "bg-secondary"
-        };
-    }
-
-    string GetPaymentDisplay(string status)
-    {
-        return status switch
-        {
-            "Pending" => "Chờ thanh toán",
-            "Paid" => "Đã thanh toán",
-            "Refunded" => "Hoàn tiền",
-            _ => status
-        };
-    }
-}
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            // Khởi tạo DataTable
-            var table = $('#bookingsTable').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
-                }
-            });
-
-            // Xử lý nút xóa
-            $('.delete-btn').click(function() {
-                var id = $(this).data('id');
-                $('#deleteForm').attr('action', '@Url.Action("Delete")/' + id);
-                $('#deleteModal').modal('show');
-            });
-        });
-    </script>
-}

@@ -1,40 +1,43 @@
-﻿@{
+﻿@* Views/Tour/Book.cshtml *@
+@model IEnumerable<Travel.Models.Tour>
+@using Microsoft.EntityFrameworkCore
+
+@{
     ViewData["Title"] = "Book a Tour";
 }
 
-<h2>Book a Tour</h2>
-<form method="post" action="/Tour/Book" id="booking-form">
-    <label for="tour">Select Tour:</label>
-    <select id="tour" name="tour" required>
-        <option value="1">Tour Đà Lạt</option>
-        <option value="2">Tour Nha Trang</option>
-        <option value="3">Tour Hạ Long</option>
-    </select>
-
-    <label for="name">Your Name:</label>
-    <input type="text" id="name" name="name" required>
-
-    <label for="email">Your Email:</label>
-    <input type="email" id="email" name="email" required>
-    <span id="email-error" style="color: red; font-size: 0.9rem;"></span>
-
-    <label for="phone">Your Phone:</label>
-    <input type="text" id="phone" name="phone" required>
-    <span id="phone-error" style="color: red; font-size: 0.9rem;"></span>
-
-    <button type="submit">Book Now</button>
-</form>
-
-<div id="booking-summary" style="display: none;">
-    <div class="booking-card">
-        <img id="tour-image" src="" alt="Tour Image">
-        <div class="booking-info">
-            <h3 id="tour-name"></h3>
-            <p><strong>Name:</strong> <span id="summary-name"></span></p>
-            <p><strong>Email:</strong> <span id="summary-email"></span></p>
-            <p><strong>Phone:</strong> <span id="summary-phone"></span></p>
+<div class="container my-5">
+    <h1 class="text-center mb-4">Book a Tour</h1>
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var tour in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.TourName" style="height: 200px; object-fit: cover;" onerror="this.src='/images/default-tour.jpg';">
+                        <div class="card-body">
+                            <h5 class="card-title">@tour.TourName</h5>
+                            <p class="card-text">@tour.Description</p>
+                            <p class="card-text"><strong>Destination:</strong> @tour.Destination?.Name</p>
+                            <p class="card-text"><strong>Duration:</strong> @tour.Duration days</p>
+                            <p class="card-text"><strong>Start Date:</strong> @tour.StartDate.ToString("dd/MM/yyyy")</p>
+                            <p class="card-text"><strong>End Date:</strong> @tour.EndDate.ToString("dd/MM/yyyy")</p>
+                            <p class="card-text"><strong>Available Seats:</strong> @tour.AvailableSeats</p>
+                            <p class="card-text"><strong>Tour Type:</strong> @tour.TourType</p>
+                            <p class="card-text text-primary"><strong>Price:</strong> $@tour.Price</p>
+                            <a href="@Url.Action("Details", "Tour", new { id = tour.TourId })" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <p class="text-muted">No upcoming tours available at the moment.</p>
+        </div>
+    }
 </div>
 
-<script src="~/js/Book_Script.js"></script>

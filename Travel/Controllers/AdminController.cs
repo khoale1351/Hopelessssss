@@ -346,50 +346,36 @@ namespace Travel.Controllers
         {
             try
             {
-                // Lấy danh sách điểm đến phù hợp với từ khóa tìm kiếm
                 var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
-                var filteredDestinations = destinations
-                    .Where(d =>
-                        d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                var results = destinations
+                    .Where(d => string.IsNullOrEmpty(searchTerm) ||
+                                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                (d.City != null && d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                                (d.Country != null && d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
                     .Select(d => new
                     {
                         destinationId = d.DestinationId,
                         name = d.Name,
-                        city = d.City,  // Sửa thành City
-                        country = d.Country // Sửa thành Country
+                        city = d.City,
+                        country = d.Country
                     })
+                    .Take(50)
                     .ToList();
 
-                return Json(filteredDestinations); // Sửa tên biến
+                return Json(results);
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi nếu cần
                 return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            var destinations = await _unitOfWork.Destinations.GetAllAsync();
-
-            var viewModel = new TourViewModel
-            {
-                // Chuyển đổi danh sách Destination thành SelectListItem
-                DestinationOptions = destinations.Select(d => new SelectListItem
-                {
-                    Value = d.DestinationId.ToString(),
-                    Text = d.Name
-                }).ToList()
-            };
-
-            return View(viewModel);
+            return View(new TourViewModel());
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -469,18 +455,18 @@ namespace Travel.Controllers
 
         [HttpPost]
         public async Task<IActionResult> EditTour(
-    int TourId,
-    string TourName,
-    int DestinationId,
-    string Description,
-    decimal Price,
-    int Duration,
-    DateTime StartDate,
-    DateTime EndDate,
-    int AvailableSeats,
-    string TourType,
-    string TourStatus,
-    IFormFile ImageFile)
+     int TourId,
+     string TourName,
+     int DestinationId,
+     string Description,
+     decimal Price,
+     int Duration,
+     DateTime StartDate,
+     DateTime EndDate,
+     int AvailableSeats,
+     string TourType,
+     string TourStatus,
+     IFormFile ImageFile)
         {
             try
             {
@@ -505,8 +491,15 @@ namespace Travel.Controllers
                 // Xử lý ảnh
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
+                    // Đảm bảo thư mục uploads tồn tại
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                    if (!Directory.Exists(uploadsDir))
+                    {
+                        Directory.CreateDirectory(uploadsDir);
+                    }
+
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+                    var filePath = Path.Combine(uploadsDir, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -528,23 +521,45 @@ namespace Travel.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteTour(int id)
         {
             try
             {
+                // Kiểm tra xem tour có tồn tại không
+                var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+                if (tour == null)
+                {
+                    return Json(new { success = false, message = "Tour không tồn tại." });
+                }
+
+                // Xóa các booking liên quan (nếu có)
+                var bookings = await _unitOfWork.Bookings.GetAllAsync();
+                var relatedBookings = bookings.Where(b => b.TourId == id).ToList();
+                foreach (var booking in relatedBookings)
+                {
+                    await _unitOfWork.Bookings.DeleteAsync(booking.BookingId);
+                }
+
+                // Xóa các đánh giá liên quan (nếu có)
+                var reviews = await _unitOfWork.Reviews.GetAllAsync();
+                var relatedReviews = reviews.Where(r => r.TourId == id).ToList();
+                foreach (var review in relatedReviews)
+                {
+                    await _unitOfWork.Reviews.DeleteAsync(review.ReviewId);
+                }
+
+                // Xóa tour
                 await _unitOfWork.Tours.DeleteAsync(id);
                 await _unitOfWork.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Xóa tour thành công!";
-                return RedirectToAction("ManageTours");
+                return Json(new { success = true, message = "Xóa tour thành công!", redirect = Url.Action("ManageTours") });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi khi xóa tour: " + ex.Message;
-                return RedirectToAction("ManageTours");
+                return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
             }
         }
-
         // Quản lý đặt tour
         public async Task<IActionResult> ManageBookings()
         {

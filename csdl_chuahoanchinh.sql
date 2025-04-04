@@ -1,4 +1,6 @@
-﻿INSERT INTO Destinations (Name, Country, City, Description, ImageUrl, Latitude, Longitude, IsPopular)
+﻿Use TourismDB
+Go
+INSERT INTO Destinations (Name, Country, City, Description, ImageUrl, Latitude, Longitude, IsPopular)
 VALUES
 (N'Vịnh Hạ Long', N'Việt Nam', N'Quảng Ninh', N'Di sản thiên nhiên thế giới với hàng nghìn đảo đá vôi.', 'https://example.com/halong.jpg', 20.910051, 107.183902, 1),
 (N'Phố cổ Hội An', N'Việt Nam', N'Quảng Nam', N'Di sản văn hóa thế giới với kiến trúc cổ kính.', 'https://example.com/hoian.jpg', 15.880058, 108.338047, 1),
@@ -13,18 +15,18 @@ VALUES
 
 	INSERT INTO Tours(
 		DestinationId, TourName, Description, Price, Duration, StartDate, EndDate, 
-		AvailableSeats, TourGuideId, ImageUrl, TourType, TourStatus
+		AvailableSeats, ImageUrl, TourType, TourStatus
 	)
 	VALUES 
 		(1, N'Tour Đà Lạt ', N'Khám phá thành phố ngàn hoa với đồi thông bạt ngàn.', 
      2500000.00, 3, '2025-04-15 08:00:00', '2025-04-17 18:00:00', 
-     20, '2ddd5220-3336-417e-b09a-2595fefb28ce', '/images/dalat.jpg', 'Group', 'Upcoming'),
+     20, '/images/dalat.jpg', 'Group', 'Upcoming'),
     (2, N'Tour Nha Trang', N'Thưởng thức bãi biển xanh, cát trắng và nắng vàng tại Nha Trang.', 
      3000000.00, 4, '2025-05-01 09:00:00', '2025-05-04 17:00:00', 
-     15, '528bf958-919a-4e78-9e7b-174d1b8a9874', '/images/nhatrang.jpg', 'Private', 'Upcoming'),
+     15, '/images/nhatrang.jpg', 'Private', 'Upcoming'),
     (3, N'Tour Hạ Long', N'Đắm mình vào vẻ đẹp hoang sơ và thiên đường biển tại Hạ Long.', 
      3500000.00, 2, '2025-06-10 07:00:00', '2025-06-11 20:00:00', 
-     25, 'fe6db55f-c1d1-4eec-9a6e-6b941966914c', '/images/halong.jpg', 'Group', 'Upcoming');
+     25, '/images/halong.jpg', 'Group', 'Upcoming');
 
 	 INSERT INTO Vouchers(Code, Description, DiscountAmount, DiscountPercentage, MinimumBookingValue, MaxDiscountAmount, ExpiryDate, UsageLimit, UsageCount, IsActive, CreatedAt)
 VALUES

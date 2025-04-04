@@ -199,15 +199,23 @@ namespace Travel.Controllers
                 return NotFound();
             }
 
-            // Kiểm tra xem booking có thể hủy không (ví dụ: chỉ hủy nếu trạng thái là Pending)
+            // Kiểm tra xem booking có thể hủy không (chỉ hủy nếu trạng thái là Pending)
             if (booking.Status != "Pending")
             {
                 TempData["Error"] = "Chỉ có thể hủy booking ở trạng thái Pending.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Cập nhật trạng thái hủy booking
-            booking.Status = "Cancelled";
+            // Tạo bản ghi trong BookingLog
+            var bookingLog = new BookingLog
+            {
+                BookingId = booking.BookingId,
+                OldStatus = booking.Status, // "Pending"
+                NewStatus = "Cancelled",
+                ChangedBy = booking.UserId, // Lấy UserId của người đặt booking
+                ChangedAt = DateTime.UtcNow
+            };
+            _context.BookingLogs.Add(bookingLog);
 
             // Hoàn lại số ghế
             if (booking.Tour != null)
@@ -224,7 +232,10 @@ namespace Travel.Controllers
                 _context.Vouchers.Update(booking.Voucher);
             }
 
-            _context.Bookings.Update(booking);
+            // Xóa bản ghi Booking
+            _context.Bookings.Remove(booking);
+
+            // Lưu tất cả thay đổi
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));

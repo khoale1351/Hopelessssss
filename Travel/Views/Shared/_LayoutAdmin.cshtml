@@ -55,8 +55,13 @@
     </nav>
 
     <div class="d-flex">
-        <!-- Sidebar -->
-        <nav class="bg-dark text-white p-3 sidebar" style="width: 250px; min-height: 100vh;">
+        <!-- Sidebar(sticky) -->
+        <nav class="bg-dark text-white p-3 sidebar" 
+         style="width: 250px; 
+                position: sticky; 
+                top: 56px;
+                height: calc(100vh - 56px);
+                overflow-y: auto;/">
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link text-white" asp-controller="Admin" asp-action="Index">

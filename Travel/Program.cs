@@ -51,6 +51,9 @@ namespace Travel
                 options.Lockout.AllowedForNewUsers = true;
             });
 
+            // Configure QuestPDF license
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
             //Entity Services
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();

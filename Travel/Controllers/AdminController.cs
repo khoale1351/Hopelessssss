@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using QuestPDF.Fluent;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -14,6 +16,7 @@ using Travel.Models;
 using Travel.Models.ViewModels;
 using Travel.Repositories;
 using Travel.ViewModels;
+using X.PagedList.Extensions;
 
 namespace Travel.Controllers
 {
@@ -33,7 +36,7 @@ namespace Travel.Controllers
             _cache = cache;
         }
 
-        // Trang tổng quan Dashboard
+//================================ Trang Tổng quan Dasboard =====================================================
         public async Task<IActionResult> Dashboard()
         {
             var cacheKey = "DashboardData";
@@ -93,38 +96,204 @@ namespace Travel.Controllers
             return RedirectToAction("Dashboard");
         }
 
-        // Quản lý người dùng
-        public async Task<IActionResult> ManageUsers(string searchQuery, string roleFilter)
+//================================ Quản lý Người dùng (User) =====================================================
+        public async Task<IActionResult> ManageUsers(string searchQuery, string roleFilter, int? page)
         {
-            var users = await _userManager.Users.ToListAsync();
-            var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            int pageSize = 10;
+            int pageNumber = page ?? 1;
+
+            var usersQuery = _userManager.Users.AsQueryable();
+            //var users = await _userManager.Users.ToListAsync();
+            //var roles = _roleManager.Roles.Select(r => r.Name).ToList();
 
             if (!string.IsNullOrEmpty(searchQuery))
             {
                 searchQuery = searchQuery.ToLower();
-                users = users.Where(u =>
-                    u.FullName.ToLower().Contains(searchQuery) ||
-                    u.Email != null && u.Email.ToLower().Contains(searchQuery))
-                    .ToList();
+                usersQuery = usersQuery.Where(u =>
+                    u.FullName.ToLower().Contains(searchQuery) 
+                    || (u.Email != null && u.Email.ToLower().Contains(searchQuery)));
             }
+
+            var allUsers = await usersQuery.ToListAsync();
 
             if (!string.IsNullOrEmpty(roleFilter) && roleFilter != "All")
             {
-                users = users.Where(u => _userManager.IsInRoleAsync(u, roleFilter).Result).ToList();
+                var filteredUsers = new List<ApplicationUser>();
+                foreach (var user in allUsers)
+                {
+                    if (await _userManager.IsInRoleAsync(user, roleFilter))
+                    {
+                        filteredUsers.Add(user);
+                    }
+                }
+                //users = users.Where(u => _userManager.IsInRoleAsync(u, roleFilter).Result).ToList();
+                allUsers = filteredUsers;
             }
 
-            ViewBag.Roles = roles;
+            //ViewBag.Roles = roles;
+            ViewBag.Roles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
             ViewBag.SelectedRole = roleFilter;
             ViewBag.SearchQuery = searchQuery;
 
-            return View(users);
+            var pagedUsers = allUsers.ToPagedList(pageNumber, pageSize);
+            return View("Users/ManageUsers", pagedUsers);
+        }
+
+        public async Task<IActionResult> UserDetails(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return BadRequest("Id không hợp lệ");
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound("Không tìm thấy người dùng");
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var viewModel = new UserDetailViewModel
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                DateOfBirth = user.DateOfBirth,
+                CreatedAt = user.CreatedAt,
+                IsActive = user.IsActive,
+                Roles = roles.ToList(),
+                MembershipType = user.MembershipType,
+                Status = user.Status
+            };
+
+            return View("Users/UserDetails", viewModel);
+        }
+
+        public async Task<IActionResult> ExportUserToPdf(string userId)
+        {
+            // Lấy thông tin người dùng từ cơ sở dữ liệu theo userId
+            var user = await _userManager.Users
+                                          .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Tạo PDF cho người dùng này
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+                    page.Header().Text($"Chi tiết người dùng: {user.FullName}")
+                        .FontSize(20)
+                        .Bold()
+                        .AlignCenter();
+
+                    page.Content().Column(col =>
+                    {
+                        col.Item().Text($"Họ và tên: {user.FullName}");
+                        col.Item().Text($"Email: {user.Email}");
+                        col.Item().Text($"Số điện thoại: {user.PhoneNumber}");
+                        col.Item().Text($"Ngày sinh: {user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A"}");
+                        col.Item().Text($"Địa chỉ: {user.Address}");
+                        col.Item().Text($"Loại thẻ: {user.MembershipType}");
+                        col.Item().Text($"Trạng thái: {(user.IsActive ? "Hoạt động" : "Đã khóa")}");
+                    });
+                });
+            });
+
+            // Tạo file PDF và trả về
+            var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/pdf", $"{user.FullName}_Details.pdf");
+        }
+
+
+        public async Task<IActionResult> ExportAllUsersToPdf()
+        {
+            var users = await _userManager.Users.ToListAsync();
+
+            // Tạo PDF cho danh sách người dùng
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+                    page.Header().Text("Danh sách người dùng").FontSize(20).Bold().AlignCenter();
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(); // FullName
+                            columns.RelativeColumn(); // Email
+                            columns.RelativeColumn(); // Phone
+                            columns.ConstantColumn(100); // Trạng thái
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Text("Họ và tên").Bold();
+                            header.Cell().Text("Email").Bold();
+                            header.Cell().Text("Số điện thoại").Bold();
+                            header.Cell().Text("Trạng thái").Bold();
+                        });
+
+                        // Lặp qua danh sách người dùng và thêm dữ liệu vào bảng
+                        foreach (var user in users)
+                        {
+                            table.Cell().Text(user.FullName);
+                            table.Cell().Text(user.Email);
+                            table.Cell().Text(user.PhoneNumber);
+                            table.Cell().Text(user.IsActive ? "Hoạt động" : "Đã khóa");
+                        }
+                    });
+                });
+            });
+
+            // Tạo file PDF và trả về
+            var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/pdf", "Users_List.pdf");
+        }
+
+
+        public async Task<IActionResult> ExportUsersToExcel()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Users");
+
+            worksheet.Cell(1, 1).Value = "Họ và tên";
+            worksheet.Cell(1, 2).Value = "Email";
+            worksheet.Cell(1, 3).Value = "Điện thoại";
+            worksheet.Cell(1, 4).Value = "Trạng thái";
+            worksheet.Cell(1, 5).Value = "Ngày tạo";
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                var user = users[i];
+                worksheet.Cell(i + 2, 1).Value = user.FullName;
+                worksheet.Cell(i + 2, 2).Value = user.Email;
+                worksheet.Cell(i + 2, 3).Value = user.PhoneNumber;
+                worksheet.Cell(i + 2, 4).Value = user.IsActive ? "Hoạt động" : "Đã khóa";
+                worksheet.Cell(i + 2, 5).Value = user.CreatedAt.ToString("dd/MM/yyyy");
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Users.xlsx");
         }
 
         public IActionResult CreateUser()
         {
             var roles = _roleManager.Roles.Select(r => r.Name).ToList();
             ViewBag.Roles = new SelectList(roles);
-            return View();
+            return View("Users/CreateUser");
         }
 
         [HttpPost]
@@ -133,50 +302,72 @@ namespace Travel.Controllers
             // Kiểm tra dữ liệu đầu vào
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return View("Users/CreateUser", model);
             }
 
-            // 🔹 Kiểm tra Email hợp lệ
+            // Kiểm tra tên có được nhập
+            if (string.IsNullOrEmpty(model.FullName))
+            {
+                ModelState.AddModelError("FullName", "Họ và Tên không để trống!");
+                return View("Users/CreateUser", model);
+            }
+
+            if (string.IsNullOrEmpty(model.Email))
+            {
+                ModelState.AddModelError("Email", "Email không để trống!");
+                return View("Users/CreateUser", model);
+            }
+
+            // Kiểm tra Email hợp lệ
             if (!new EmailAddressAttribute().IsValid(model.Email))
             {
                 ModelState.AddModelError("Email", "Email không hợp lệ.");
-                return View(model);
+                return View("Users/CreateUser", model);
             }
 
-            // 🔹 Kiểm tra số điện thoại hợp lệ (10-11 chữ số, bắt đầu bằng 0)
-            if (!Regex.IsMatch(model.PhoneNumber, @"^0\d{9,10}$"))
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("Email", "Email đã tồn tại.");
+                return View("Users/CreateUser", model);
+            }
+
+            // Kiểm tra số điện thoại hợp lệ (10-11 chữ số, bắt đầu bằng 0)
+            if (!string.IsNullOrEmpty(model.PhoneNumber) && !Regex.IsMatch(model.PhoneNumber, @"^0\d{9,10}$"))
             {
                 ModelState.AddModelError("PhoneNumber", "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.");
-                return View(model);
+                return View("Users/CreateUser", model);
             }
 
-            // 🔹 Kiểm tra ngày sinh hợp lệ
-            if (!model.DateOfBirth.HasValue)
+            // Kiểm tra ngày sinh hợp lệ
+            if (model.DateOfBirth.HasValue)
             {
-                ModelState.AddModelError("DateOfBirth", "Ngày sinh là bắt buộc.");
-                return View(model);
-            }
+                DateTime today = DateTime.Today;
+                int age = today.Year - model.DateOfBirth.Value.Year;
+                if (model.DateOfBirth.Value.Date > today.AddYears(-age)) age--;
 
-            DateTime today = DateTime.Today;
-            int age = today.Year - model.DateOfBirth.Value.Year;
-            if (model.DateOfBirth.Value.Date > today.AddYears(-age)) age--;
-
-            if (age < 18)
-            {
-                ModelState.AddModelError("DateOfBirth", "Người dùng phải từ 18 tuổi trở lên.");
-                return View(model);
+                if (age < 18)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Người dùng phải từ 18 tuổi trở lên.");
+                    return View("Users/CreateUser", model);
+                }
+                if (age > 100)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ.");
+                    return View("Users/CreateUser", model);
+                }
+                if (model.DateOfBirth.Value.Date == today.Date)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Ngày sinh không thể là ngày hiện tại.");
+                    return View("Users/CreateUser", model);
+                }
             }
-            if (age > 100)
-            {
-                ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ.");
-                return View(model);
-            }
-
-            // 🔹 Kiểm tra mật khẩu (chỉ cần tối thiểu 8 ký tự)
+            
+            // Kiểm tra mật khẩu (chỉ cần tối thiểu 8 ký tự)
             if (string.IsNullOrEmpty(model.Password) || model.Password.Length < 8)
             {
                 ModelState.AddModelError("Password", "Mật khẩu phải có ít nhất 8 ký tự.");
-                return View(model);
+                return View("Users/CreateUser", model);
             }
 
             try
@@ -232,7 +423,7 @@ namespace Travel.Controllers
                 ModelState.AddModelError("", "Lỗi khi thêm người dùng: " + ex.Message);
             }
 
-            return View(model);
+            return View("Users/CreateUser", model);
         }
 
         public async Task<IActionResult> EditUser(string id)
@@ -241,7 +432,7 @@ namespace Travel.Controllers
             if (user == null) return NotFound();
 
             ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
-            return View(user);
+            return View("Users/EditUser", user);
         }
 
         [HttpPost]
@@ -271,7 +462,7 @@ namespace Travel.Controllers
                 ModelState.AddModelError(string.Empty, error.Description);
             }
             ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
-            return View(model);
+            return View("Users/EditUser", model);
         }
 
         [HttpPost]
@@ -334,8 +525,14 @@ namespace Travel.Controllers
             return RedirectToAction("ManageUsers");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> IsEmailUnique(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            return Json(new { exists = user != null });
+        }
 
-        // Quản lý Tour
+//================================ Quản lý Tour ==========================================================
         public async Task<IActionResult> ManageTours()
         {
             var tours = await _unitOfWork.Tours.GetAllAsync();
@@ -455,18 +652,9 @@ namespace Travel.Controllers
 
         [HttpPost]
         public async Task<IActionResult> EditTour(
-     int TourId,
-     string TourName,
-     int DestinationId,
-     string Description,
-     decimal Price,
-     int Duration,
-     DateTime StartDate,
-     DateTime EndDate,
-     int AvailableSeats,
-     string TourType,
-     string TourStatus,
-     IFormFile ImageFile)
+            int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
+            DateTime StartDate, DateTime EndDate,
+            int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
         {
             try
             {
@@ -560,21 +748,21 @@ namespace Travel.Controllers
                 return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
             }
         }
-        // Quản lý đặt tour
+//========================== Quản lý Đặt Tour (Booking) ========================================================
         public async Task<IActionResult> ManageBookings()
         {
             var bookings = await _unitOfWork.Bookings.GetAllAsync();
             return View(bookings);
         }
 
-        // Quản lý đánh giá
+//================================ Quản lý Đánh giá (Review) ====================================================
         public async Task<IActionResult> ManageReviews()
         {
             var reviews = await _unitOfWork.Reviews.GetAllAsync();
             return View(reviews);
         }
 
-        // Quản lý Voucher
+//================================ Quản lý Voucher =============================================================
         public async Task<IActionResult> ManageVouchers()
         {
             var vouchers = await _unitOfWork.Vouchers.GetAllAsync();

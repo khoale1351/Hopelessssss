@@ -1,4 +1,4 @@
-﻿@model Travel.Models.ApplicationUser
+﻿@model Travel.ViewModels.UserViewModel
 @using Microsoft.EntityFrameworkCore
 @inject Microsoft.AspNetCore.Identity.RoleManager<IdentityRole> RoleManager
 @{
@@ -15,49 +15,48 @@
         <div class="col-md-8">
             <form asp-controller="Admin" asp-action="CreateUser" method="post" class="card p-4 shadow-lg needs-validation" novalidate>
                 @Html.AntiForgeryToken()
-
                 <!-- FullName -->
                 <div class="mb-3">
                     <label asp-for="FullName" class="form-label">Họ và tên</label>
                     <input asp-for="FullName" class="form-control" required />
                     <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
-
                 <!-- Email -->
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label">Email</label>
                     <input asp-for="Email" class="form-control" type="email" required />
                     <span asp-validation-for="Email" class="text-danger"></span>
+                    <span id="email-error" class="text-danger"></span>
                 </div>
-
                 <!-- Password -->
                 <div class="mb-3">
-                    <label for="password" class="form-label">Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" required minlength="8" />
-                    <span class="text-danger">@(ViewData.ModelState["password"]?.Errors.FirstOrDefault()?.ErrorMessage)</span>
+                    <label for="Password" class="form-label">Mật khẩu</label>
+                    <input asp-for="Password" class="form-control" type="password" required minlength="8"/>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <span id="password-error" class="text-danger"></span>
                 </div>
-
                 <!-- PhoneNumber -->
                 <div class="mb-3">
                     <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
-                    <input asp-for="PhoneNumber" class="form-control" type="tel" pattern="^0\d{9,10}$" required />
+                    <input asp-for="PhoneNumber" class="form-control" type="tel" pattern="^0\d{9,10}$" />
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    <span id="phone-error" class="text-danger"></span>
                 </div>
 
                 <!-- DateOfBirth -->
                 <div class="mb-3">
                     <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
-                    <input asp-for="DateOfBirth" class="form-control" type="date" required />
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
                     <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    <span id="dob-error" class="text-danger"></span>
                 </div>
 
                 <!-- Address -->
                 <div class="mb-3">
                     <label asp-for="Address" class="form-label">Địa chỉ</label>
-                    <input asp-for="Address" class="form-control" required />
+                    <input asp-for="Address" class="form-control" />
                     <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
-
                 <!-- MembershipType -->
                 <div class="mb-3">
                     <label asp-for="MembershipType" class="form-label">Loại thành viên</label>
@@ -69,7 +68,6 @@
                     </select>
                     <span asp-validation-for="MembershipType" class="text-danger"></span>
                 </div>
-
                 <!-- Role -->
                 <div class="form-group">
                     <label for="Role">Vai trò</label>
@@ -80,9 +78,6 @@
                         }
                     </select>
                 </div>
-
-
-
                 <!-- Nút Submit và Cancel -->
                 <div class="d-flex justify-content-between">
                     <button type="submit" class="btn btn-primary">Thêm Người Dùng</button>
@@ -92,9 +87,9 @@
         </div>
     </div>
 </div>
+
 <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
 <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
-
 
 <!-- Validation JS -->
 @section Scripts {
@@ -113,6 +108,63 @@
                 }, false);
             });
         })();
+
+        // Kiểm tra mật khẩu
+        $(document).ready(function () {
+            $("#Password").on("input", function () {
+                var password = $(this).val();
+                var inputField = $(this);
+                var errorSpan = $("#password-error");
+
+                if (password.length < 8) {
+                    errorSpan.text("Mật khẩu phải có ít nhất 8 ký tự.");
+                    inputField.addClass("is-invalid");
+                } else {
+                    errorSpan.text("");
+                    inputField.removeClass("is-invalid");
+                }
+            });
+
+            // Kiểm tra Email có duy nhất không
+            $("#Email").on("input", function () {
+                var email = $(this).val();
+                var errorSpan = $("#email-error");
+
+                $.ajax({
+                    url: '@Url.Action("IsEmailUnique", "Admin")',
+                    type: 'POST',
+                    data: { email: email },
+                    success: function (response) {
+                        if (response.exists) {
+                            errorSpan.text("Email đã tồn tại.");
+                            $("#Email").addClass("is-invalid");
+                        } else {
+                            errorSpan.text("");
+                            $("#Email").removeClass("is-invalid");
+                        }
+                    }
+                });
+            });
+
+            // Kiểm tra ngày sinh
+            $("#DateOfBirth").on("input", function () {
+                var dob = new Date($(this).val());
+                var today = new Date();
+                var age = today.getFullYear() - dob.getFullYear();
+                var errorSpan = $("#dob-error");
+
+                if (dob >= today) {
+                    errorSpan.text("Ngày sinh không thể là ngày hiện tại hoặc sau ngày hôm nay.");
+                    $(this).addClass("is-invalid");
+                } else if (age < 18) {
+                    errorSpan.text("Bạn phải đủ 18 tuổi.");
+                    $(this).addClass("is-invalid");
+                } else {
+                    errorSpan.text("");
+                    $(this).removeClass("is-invalid");
+                }
+            });
+        });
     </script>
 
     @await Html.PartialAsync("_ValidationScriptsPartial")

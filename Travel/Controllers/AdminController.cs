@@ -22,6 +22,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using DocumentFormat.OpenXml.InkML;
+using Travel.Repositories.IMAGESERVICE;
 
 namespace Travel.Controllers
 {
@@ -32,13 +33,15 @@ namespace Travel.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMemoryCache _cache;
+        private readonly IImageService _imageService;
 
-        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache)
+        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache, IImageService imageService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _roleManager = roleManager;
             _cache = cache;
+            _imageService = imageService;
         }
 
 //================================ Trang Tổng quan Dasboard =====================================================
@@ -197,16 +200,22 @@ namespace Travel.Controllers
             string? avatarPath = null;
             if (model.AvatarFile != null && model.AvatarFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
-                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(model.AvatarFile.FileName);
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                var avatarResult = await _imageService.SaveImageAsync(
+                    model.AvatarFile,
+                    "images/avatars",
+                    filePrefix: "user",
+                    targetSize: new Size(200, 200) // Kích thước cần resize cho avatar
+                );
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                if (!avatarResult.IsSuccess)
                 {
-                    await model.AvatarFile.CopyToAsync(stream);
+                    ModelState.AddModelError("AvatarFile", avatarResult.ErrorMessage);
+                    var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+                    ViewBag.Roles = new SelectList(roles);
+                    return View("Users/CreateUser", model);
                 }
 
-                avatarPath = $"images/avatars/{uniqueFileName}";
+                avatarPath = avatarResult.FilePath;
             }
 
             // Kiểm tra tên có được nhập
@@ -383,7 +392,12 @@ namespace Travel.Controllers
 
             if (model.AvatarFile != null && model.AvatarFile.Length > 0)
             {
-                var avatarResult = await SaveAvatarAsync(user, model.AvatarFile);
+                var avatarResult = await _imageService.SaveImageAsync(
+                    model.AvatarFile,
+                    "images/avatars",
+                    filePrefix: "user",
+                    targetSize: new Size(200, 200) // Kích thước cần resize cho avatar
+                );
                 if (!avatarResult.IsSuccess)
                 {
                     ModelState.AddModelError("AvatarFile", avatarResult.ErrorMessage);
@@ -669,50 +683,50 @@ namespace Travel.Controllers
             return Json(new { exists = user != null });
         }
 
-        private async Task<(bool IsSuccess, string? FilePath, string? ErrorMessage)> SaveAvatarAsync(ApplicationUser user, IFormFile avatarFile)
-        {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var extension = Path.GetExtension(avatarFile.FileName).ToLower();
+        //private async Task<(bool IsSuccess, string? FilePath, string? ErrorMessage)> SaveAvatarAsync(ApplicationUser user, IFormFile avatarFile)
+        //{
+        //    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        //    var extension = Path.GetExtension(avatarFile.FileName).ToLower();
 
-            if (!allowedExtensions.Contains(extension))
-            {
-                return (false, null, "Chỉ cho phép định dạng ảnh: jpg, jpeg, png, gif.");
-            }
+        //    if (!allowedExtensions.Contains(extension))
+        //    {
+        //        return (false, null, "Chỉ cho phép định dạng ảnh: jpg, jpeg, png, gif.");
+        //    }
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
+        //    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
+        //    if (!Directory.Exists(uploadsFolder))
+        //    {
+        //        Directory.CreateDirectory(uploadsFolder);
+        //    }
 
-            var uniqueFileName = $"user-{user.Id}-{DateTime.Now.Ticks}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-            var virtualPath = $"images/avatars/{uniqueFileName}";
+        //    var uniqueFileName = $"user-{user.Id}-{DateTime.Now.Ticks}{extension}";
+        //    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+        //    var virtualPath = $"images/avatars/{uniqueFileName}";
 
-            using (var image = await Image.LoadAsync(avatarFile.OpenReadStream()))
-            {
-                image.Mutate(x => x.Resize(new ResizeOptions
-                {
-                    Size = new Size(200, 200),
-                    Mode = ResizeMode.Crop
-                }));
+        //    using (var image = await Image.LoadAsync(avatarFile.OpenReadStream()))
+        //    {
+        //        image.Mutate(x => x.Resize(new ResizeOptions
+        //        {
+        //            Size = new Size(200, 200),
+        //            Mode = ResizeMode.Crop
+        //        }));
 
-                var encoder = new JpegEncoder { Quality = 85 };
-                await image.SaveAsync(filePath, encoder);
-            }
+        //        var encoder = new JpegEncoder { Quality = 85 };
+        //        await image.SaveAsync(filePath, encoder);
+        //    }
 
-            // Xóa avatar cũ nếu có
-            if (!string.IsNullOrEmpty(user.AvatarPath))
-            {
-                var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarPath);
-                if (System.IO.File.Exists(oldFilePath))
-                {
-                    System.IO.File.Delete(oldFilePath);
-                }
-            }
+        //    // Xóa avatar cũ nếu có
+        //    if (!string.IsNullOrEmpty(user.AvatarPath))
+        //    {
+        //        var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarPath);
+        //        if (System.IO.File.Exists(oldFilePath))
+        //        {
+        //            System.IO.File.Delete(oldFilePath);
+        //        }
+        //    }
 
-            return (true, virtualPath, null);
-        }
+        //    return (true, virtualPath, null);
+        //}
 
         //================================ Quản lý Tour ==========================================================
         public async Task<IActionResult> ManageTours()

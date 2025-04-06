@@ -5,6 +5,7 @@ using Travel.Models;
 using Travel.Repositories;
 using Travel.Repositories.BookingsRepository;
 using Travel.Repositories.DestinationsRepository;
+using Travel.Repositories.IMAGESERVICE;
 using Travel.Repositories.NotificationsRepository;
 using Travel.Repositories.PaymentRepository;
 using Travel.Repositories.ReviewsRepository;
@@ -64,6 +65,7 @@ namespace Travel
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<IImageService, ImageService>();
 
             var app = builder.Build();
 

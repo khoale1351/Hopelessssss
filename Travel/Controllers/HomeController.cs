@@ -18,5 +18,6 @@ namespace Travel.Controllers
             var tours = _context.Tours.Take(3).ToList();
             return View(tours);
         }
+        
     }
 }

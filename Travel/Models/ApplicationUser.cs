@@ -23,9 +23,6 @@ namespace Travel.Models
         [Required, StringLength(50)]
         public string Status { get; set; } = "Active";
 
-        [StringLength(255)]
-        public string? AvatarPath { get; set; }
-
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public virtual ICollection<BookingLog> BookingLogs { get; set; } = new List<BookingLog>();
         public virtual ICollection<CustomerSupport> CustomerSupports { get; set; } = new List<CustomerSupport>();

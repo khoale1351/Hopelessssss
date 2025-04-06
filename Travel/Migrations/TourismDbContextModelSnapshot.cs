@@ -166,10 +166,6 @@ namespace Travel.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AvatarPath")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -703,31 +699,6 @@ namespace Travel.Migrations
                     b.ToTable("Tours");
                 });
 
-            modelBuilder.Entity("Travel.Models.TourImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TourId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TourId");
-
-                    b.ToTable("TourImage");
-                });
-
             modelBuilder.Entity("Travel.Models.TransactionHistory", b =>
                 {
                     b.Property<int>("TransactionId")
@@ -1059,17 +1030,6 @@ namespace Travel.Migrations
                     b.Navigation("TourGuide");
                 });
 
-            modelBuilder.Entity("Travel.Models.TourImage", b =>
-                {
-                    b.HasOne("Travel.Models.Tour", "Tour")
-                        .WithMany("TourImages")
-                        .HasForeignKey("TourId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tour");
-                });
-
             modelBuilder.Entity("Travel.Models.TransactionHistory", b =>
                 {
                     b.HasOne("Travel.Models.ApplicationUser", "User")
@@ -1131,8 +1091,6 @@ namespace Travel.Migrations
                     b.Navigation("Bookings");
 
                     b.Navigation("Reviews");
-
-                    b.Navigation("TourImages");
                 });
 
             modelBuilder.Entity("Travel.Models.Voucher", b =>

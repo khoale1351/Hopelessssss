@@ -26,12 +26,9 @@ namespace Travel.ViewModels
         [RegularExpression(@"^0\d{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.")]
         public string PhoneNumber { get; set; }
 
-        public string Role { get; set; }
 
         public string MembershipType { get; set; } = "Silver";
         public string Status { get; set; } = "Active";
         public bool IsActive { get; set; } = true;
-
-        public IFormFile? AvatarFile { get; set; }
     }
 }

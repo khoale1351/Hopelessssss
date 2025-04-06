@@ -2,7 +2,6 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,21 +22,19 @@
         }
 
         .search-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: WHite;
+            position: relative; /* Đổi từ absolute sang relative để hiển thị inline */
+            background: white;
             height: 40px;
             border-radius: 40px;
-            padding: 0; /* Loại bỏ padding để kiểm soát tốt hơn */
+            padding: 0;
             display: flex;
-            align-items: center; /* Thêm để căn giữa theo chiều dọc */
+            align-items: center;
             justify-content: space-between;
+            margin: 0 10px; /* Thêm margin để tạo khoảng cách */
         }
 
             .search-box:hover > .search-txt {
-                width: 240px;
+                width: 150px; /* Giảm chiều rộng để phù hợp với navbar */
                 padding: 0 6px;
             }
 
@@ -59,19 +56,19 @@
             color: white;
             cursor: pointer;
             text-decoration: none;
-            margin-right: 0; /* Đảm bảo không có margin làm lệch vị trí */
+            margin-right: 0;
         }
 
             .search-btn > i {
                 font-size: 20px;
-                line-height: 40px; /* Đảm bảo icon căn giữa theo chiều dọc */
+                line-height: 40px;
             }
 
         .search-txt {
             border: none;
             background: none;
             outline: none;
-            padding: 0 6px; /* Đảm bảo padding không làm lệch */
+            padding: 0 6px;
             color: black;
             font-size: 16px;
             transition: 0.4s;
@@ -79,8 +76,38 @@
             width: 0px;
             font-weight: bold;
         }
-    </style>
 
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .dropdown-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .dropdown-list li {
+                padding: 10px;
+                cursor: pointer;
+                border-bottom: 1px solid #eee;
+            }
+
+                .dropdown-list li:hover {
+                    background: #f0f0f0;
+                }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
@@ -92,19 +119,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li><a href="/">Home</a></li>
-
                     <li><a href="/Tour/Book">Book a Tour</a></li>
-
                     <li><a href="/Forum">Forum</a></li>
                 </ul>
-                <div class="search-box">
-                    <input type="text" name="name" class="search-txt" placeholder="Search..." />
-                    <a class="search-btn" href="#">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                    </a>
-                </div>
-
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item d-flex align-items-center">
+                        <div class="search-box">
+                            <input type="text" name="name" class="search-txt" placeholder="Nhập tour cần tìm" />
+                            <a class="search-btn" href="#">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </a>
+                            <div class="search-dropdown">
+                                <ul class="dropdown-list"></ul>
+                            </div>
+                        </div>
+                    </li>
                     @if (SignInManager.IsSignedIn(User))
                     {
                         var user = await UserManager.GetUserAsync(User);
@@ -158,7 +187,6 @@
     <main>
         @RenderBody();
     </main>
-
 
     <!-- Footer -->
     <footer class="footer bg-dark text-white py-3">
@@ -225,7 +253,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 
-
     <!-- Script Slide.js -->
     <script src="~/js/Slide.js"></script>
     <script src="~/js/tourmanagement.js"></script>
@@ -233,6 +260,83 @@
     <!-- Script hiển thị năm -->
     <script>
         document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+
+    <!-- Script xử lý tìm kiếm -->
+    <script>
+        $(document).ready(function () {
+            const $searchInput = $('.search-txt');
+            const $searchDropdown = $('.search-dropdown');
+            const $dropdownList = $('.dropdown-list');
+
+            // Xử lý khi người dùng nhập vào ô tìm kiếm
+            $searchInput.on('input', function () {
+                const keyword = $(this).val().trim();
+
+                if (keyword.length === 0) {
+                    $searchDropdown.hide();
+                    return;
+                }
+
+                // Gọi API tìm kiếm từ TourController
+                $.ajax({
+                    url: '/Tour/SearchTours',
+                    method: 'GET',
+                    data: { keyword: keyword },
+                    success: function (data) {
+                        console.log('Response from server:', data); // Thêm logging
+                        $dropdownList.empty();
+
+                        if (data.length === 0) {
+                            console.log('No tours found');
+                            $searchDropdown.hide();
+                            return;
+                        }
+
+                        // Hiển thị kết quả trong dropdown
+                        data.forEach(tour => {
+                            $dropdownList.append(
+                                `<li data-tour-id="${tour.tourId}">${tour.tourName}</li>`
+                            );
+                        });
+
+                        $searchDropdown.show();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching search results:', error);
+                        $searchDropdown.hide();
+                    }
+                });
+            });
+
+            // Xử lý khi người dùng click vào một gợi ý
+            $dropdownList.on('click', 'li', function () {
+                const tourName = $(this).text();
+                $searchInput.val(tourName);
+                $searchDropdown.hide();
+            });
+
+            // Xử lý khi nhấn nút tìm kiếm
+            $('.search-btn').on('click', function (e) {
+                e.preventDefault();
+                const keyword = $('.search-txt').val().trim();
+
+                if (keyword.length === 0) {
+                    alert('Please enter a search keyword.');
+                    return;
+                }
+
+                // Chuyển hướng đến action FindTour trong TourController
+                window.location.href = `/Tour/FindTour?keyword=${encodeURIComponent(keyword)}`;
+            });
+
+            // Ẩn dropdown khi click ra ngoài
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.search-box').length) {
+                    $searchDropdown.hide();
+                }
+            });
+        });
     </script>
 
     <!-- Render section Scripts cho các trang con -->

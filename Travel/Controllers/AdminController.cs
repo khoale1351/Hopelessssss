@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using QuestPDF.Fluent;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -17,6 +18,10 @@ using Travel.Models.ViewModels;
 using Travel.Repositories;
 using Travel.ViewModels;
 using X.PagedList.Extensions;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using DocumentFormat.OpenXml.InkML;
 
 namespace Travel.Controllers
 {
@@ -150,6 +155,7 @@ namespace Travel.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Cập nhật ProfilePictureUrl dựa trên AvatarPath (nếu rỗng thì dùng ảnh mặc định)
             var viewModel = new UserDetailViewModel
             {
                 Id = user.Id,
@@ -162,132 +168,13 @@ namespace Travel.Controllers
                 IsActive = user.IsActive,
                 Roles = roles.ToList(),
                 MembershipType = user.MembershipType,
-                Status = user.Status
+                Status = user.Status,
+                ProfilePictureUrl = string.IsNullOrEmpty(user.AvatarPath) ? "/images/default-avatar.png" : user.AvatarPath
             };
 
             return View("Users/UserDetails", viewModel);
         }
 
-        public async Task<IActionResult> ExportUserToPdf(string userId)
-        {
-            // Lấy thông tin người dùng từ cơ sở dữ liệu theo userId
-            var user = await _userManager.Users
-                                          .FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            // Tạo PDF cho người dùng này
-            var pdf = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(20);
-                    page.Header().Text($"Chi tiết người dùng: {user.FullName}")
-                        .FontSize(20)
-                        .Bold()
-                        .AlignCenter();
-
-                    page.Content().Column(col =>
-                    {
-                        col.Item().Text($"Họ và tên: {user.FullName}");
-                        col.Item().Text($"Email: {user.Email}");
-                        col.Item().Text($"Số điện thoại: {user.PhoneNumber}");
-                        col.Item().Text($"Ngày sinh: {user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A"}");
-                        col.Item().Text($"Địa chỉ: {user.Address}");
-                        col.Item().Text($"Loại thẻ: {user.MembershipType}");
-                        col.Item().Text($"Trạng thái: {(user.IsActive ? "Hoạt động" : "Đã khóa")}");
-                    });
-                });
-            });
-
-            // Tạo file PDF và trả về
-            var stream = new MemoryStream();
-            pdf.GeneratePdf(stream);
-            stream.Position = 0;
-            return File(stream.ToArray(), "application/pdf", $"{user.FullName}_Details.pdf");
-        }
-
-
-        public async Task<IActionResult> ExportAllUsersToPdf()
-        {
-            var users = await _userManager.Users.ToListAsync();
-
-            // Tạo PDF cho danh sách người dùng
-            var pdf = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(20);
-                    page.Header().Text("Danh sách người dùng").FontSize(20).Bold().AlignCenter();
-
-                    page.Content().Table(table =>
-                    {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.RelativeColumn(); // FullName
-                            columns.RelativeColumn(); // Email
-                            columns.RelativeColumn(); // Phone
-                            columns.ConstantColumn(100); // Trạng thái
-                        });
-
-                        table.Header(header =>
-                        {
-                            header.Cell().Text("Họ và tên").Bold();
-                            header.Cell().Text("Email").Bold();
-                            header.Cell().Text("Số điện thoại").Bold();
-                            header.Cell().Text("Trạng thái").Bold();
-                        });
-
-                        // Lặp qua danh sách người dùng và thêm dữ liệu vào bảng
-                        foreach (var user in users)
-                        {
-                            table.Cell().Text(user.FullName);
-                            table.Cell().Text(user.Email);
-                            table.Cell().Text(user.PhoneNumber);
-                            table.Cell().Text(user.IsActive ? "Hoạt động" : "Đã khóa");
-                        }
-                    });
-                });
-            });
-
-            // Tạo file PDF và trả về
-            var stream = new MemoryStream();
-            pdf.GeneratePdf(stream);
-            stream.Position = 0;
-            return File(stream.ToArray(), "application/pdf", "Users_List.pdf");
-        }
-
-
-        public async Task<IActionResult> ExportUsersToExcel()
-        {
-            var users = await _userManager.Users.ToListAsync();
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Users");
-
-            worksheet.Cell(1, 1).Value = "Họ và tên";
-            worksheet.Cell(1, 2).Value = "Email";
-            worksheet.Cell(1, 3).Value = "Điện thoại";
-            worksheet.Cell(1, 4).Value = "Trạng thái";
-            worksheet.Cell(1, 5).Value = "Ngày tạo";
-
-            for (int i = 0; i < users.Count; i++)
-            {
-                var user = users[i];
-                worksheet.Cell(i + 2, 1).Value = user.FullName;
-                worksheet.Cell(i + 2, 2).Value = user.Email;
-                worksheet.Cell(i + 2, 3).Value = user.PhoneNumber;
-                worksheet.Cell(i + 2, 4).Value = user.IsActive ? "Hoạt động" : "Đã khóa";
-                worksheet.Cell(i + 2, 5).Value = user.CreatedAt.ToString("dd/MM/yyyy");
-            }
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            stream.Position = 0;
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Users.xlsx");
-        }
 
         public IActionResult CreateUser()
         {
@@ -302,7 +189,24 @@ namespace Travel.Controllers
             // Kiểm tra dữ liệu đầu vào
             if (!ModelState.IsValid)
             {
+                var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+                ViewBag.Roles = new SelectList(roles);
                 return View("Users/CreateUser", model);
+            }
+
+            string? avatarPath = null;
+            if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(model.AvatarFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.AvatarFile.CopyToAsync(stream);
+                }
+
+                avatarPath = $"images/avatars/{uniqueFileName}";
             }
 
             // Kiểm tra tên có được nhập
@@ -384,7 +288,8 @@ namespace Travel.Controllers
                     MembershipType = model.MembershipType,
                     Status = model.Status,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    AvatarPath = avatarPath
                 };
 
                 // Tạo tài khoản người dùng với mật khẩu
@@ -431,29 +336,84 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
-            return View("Users/EditUser", user);
+            // Lấy vai trò của người dùng
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            // Lấy danh sách tất cả vai trò từ RoleManager
+            var allRoles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
+
+            if (user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow)
+            {
+                user.Status = "Inactive";
+                user.IsActive = false;
+            }
+            else
+            {
+                user.Status = "Active";
+                user.IsActive = true;
+            }
+
+            // Khởi tạo model UserViewModel
+            var model = new UserViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                DateOfBirth = user.DateOfBirth,
+                MembershipType = user.MembershipType,
+                Status = user.Status,
+                IsActive = user.IsActive,
+                Role = userRoles.FirstOrDefault() // Chọn vai trò đầu tiên trong danh sách người dùng
+            };
+
+            // Truyền dữ liệu vào ViewBag
+            ViewBag.RoleList = new SelectList(allRoles, model.Role); // Đảm bảo vai trò hiện tại được chọn
+
+            await LoadEditUserViewBags(user);
+
+            return View("Users/EditUser", model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditUser(ApplicationUser model)
+        public async Task<IActionResult> EditUser(string id, UserViewModel model)
         {
-            var user = await _userManager.FindByIdAsync(model.Id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            // Cập nhật tất cả các thuộc tính
+            if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+            {
+                var avatarResult = await SaveAvatarAsync(user, model.AvatarFile);
+                if (!avatarResult.IsSuccess)
+                {
+                    ModelState.AddModelError("AvatarFile", avatarResult.ErrorMessage);
+                    await LoadEditUserViewBags(user);
+                    return View("Users/EditUser", model);
+                }
+
+                user.AvatarPath = avatarResult.FilePath;
+            }
+
+            // Cập nhật thông tin người dùng
             user.FullName = model.FullName;
             user.Email = model.Email;
             user.PhoneNumber = model.PhoneNumber;
             user.DateOfBirth = model.DateOfBirth;
             user.Address = model.Address;
             user.MembershipType = model.MembershipType;
-            user.Status = model.Status;
-            user.IsActive = model.IsActive;
+
+            // Cập nhật vai trò người dùng
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, currentRoles.ToArray());
+            if (!string.IsNullOrEmpty(model.Role))
+            {
+                await _userManager.AddToRoleAsync(user, model.Role);
+            }
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
+                TempData["SuccessMessage"] = "Cập nhật thành công!";
                 return RedirectToAction("ManageUsers");
             }
 
@@ -461,9 +421,39 @@ namespace Travel.Controllers
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            ViewBag.IsLockedOut = await _userManager.IsLockedOutAsync(user);
+
+            await LoadEditUserViewBags(user);
             return View("Users/EditUser", model);
         }
+
+
+        private async Task LoadEditUserViewBags(ApplicationUser user)
+        {
+            ViewBag.UserId = user.Id;
+            ViewBag.CurrentAvatar = user.AvatarPath;
+
+            // Cập nhật danh sách vai trò từ DB thay vì hardcode
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var allRoles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
+            ViewBag.RoleList = new SelectList(allRoles, userRoles.FirstOrDefault());
+
+            // Trạng thái: Kích hoạt / Vô hiệu hóa (hardcoded)
+            var statusList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "Active", Text = "Kích hoạt", Selected = (user.Status == "Active") },
+                new SelectListItem { Value = "Inactive", Text = "Vô hiệu hóa", Selected = (user.Status == "Inactive") }
+            };
+            ViewBag.StatusList = statusList;
+
+            // MembershipType (hardcoded)
+            ViewBag.MembershipTypes = new SelectList(new[] {
+                new SelectListItem { Value = "Silver", Text = "Silver" },
+                new SelectListItem { Value = "Gold", Text = "Gold" },
+                new SelectListItem { Value = "Platinum", Text = "Platinum" },
+                new SelectListItem { Value = "Diamond", Text = "Diamond" }
+            }, "Value", "Text", user.MembershipType);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> DeleteUser(string id)
@@ -496,7 +486,8 @@ namespace Travel.Controllers
 
             user.LockoutEnabled = true;
             user.LockoutEnd = DateTime.UtcNow.AddYears(100);
-            user.IsActive = false; // Cập nhật trạng thái người dùng
+            user.IsActive = false;
+            user.Status = "Inactive";
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -514,7 +505,8 @@ namespace Travel.Controllers
             if (user == null) return NotFound();
 
             user.LockoutEnd = null;
-            user.IsActive = true; 
+            user.IsActive = true;
+            user.Status = "Active";
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -525,6 +517,151 @@ namespace Travel.Controllers
             return RedirectToAction("ManageUsers");
         }
 
+        public async Task<IActionResult> ExportUserToPdf(string userId)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+                    page.Header().Text($"Chi tiết người dùng: {user.FullName ?? "N/A"}")
+                        .FontSize(20)
+                        .Bold()
+                        .AlignCenter();
+
+                    page.Content().Column(col =>
+                    {
+                        if (!string.IsNullOrEmpty(user.AvatarPath))
+                        {
+                            try
+                            {
+                                byte[] imageBytes = System.IO.File.ReadAllBytes(Path.Combine("wwwroot", user.AvatarPath));
+
+                                col.Item().PaddingBottom(10).AlignCenter().Element(container =>
+                                {
+                                    container
+                                        .Height(150)
+                                        .Width(150)
+                                        .Image(imageBytes)
+                                        .FitArea(); // Fix lỗi layout
+                                });
+                            }
+                            catch
+                            {
+                                col.Item().Text("Ảnh đại diện: N/A").Italic();
+                            }
+                        }
+                        else
+                        {
+                            col.Item().Text("Ảnh đại diện: N/A").Italic();
+                        }
+
+
+
+                        col.Item().Text($"Họ và tên: {user.FullName ?? "N/A"}");
+                        col.Item().Text($"Email: {user.Email ?? "N/A"}");
+                        col.Item().Text($"Số điện thoại: {user.PhoneNumber ?? "N/A"}");
+                        col.Item().Text($"Ngày sinh: {user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A"}");
+                        col.Item().Text($"Địa chỉ: {user.Address ?? "N/A"}");
+                        col.Item().Text($"Loại thành viên: {user.MembershipType ?? "N/A"}");
+                        col.Item().Text($"Trạng thái: {(user.IsActive ? "Hoạt động" : "Đã khóa")}");
+                        col.Item().Text($"Ngày tạo: {user.CreatedAt.ToString("dd/MM/yyyy")}");
+                        col.Item().Text($"Vai trò: {(roles.Count > 0 ? string.Join(", ", roles) : "N/A")}");
+                    });
+                });
+            });
+
+            using var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/pdf", $"{user.FullName ?? "User"}_Details.pdf");
+        }
+
+
+        public async Task<IActionResult> ExportAllUsersToPdf()
+        {
+            var users = await _userManager.Users.ToListAsync();
+
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+                    page.Header().Text("Danh sách người dùng").FontSize(20).Bold().AlignCenter();
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(); // FullName
+                            columns.RelativeColumn(); // Email
+                            columns.RelativeColumn(); // Phone
+                            columns.ConstantColumn(100); // Trạng thái
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Text("Họ và tên").Bold();
+                            header.Cell().Text("Email").Bold();
+                            header.Cell().Text("Số điện thoại").Bold();
+                            header.Cell().Text("Trạng thái").Bold();
+                        });
+
+                        foreach (var user in users)
+                        {
+                            table.Cell().Text(user.FullName ?? "N/A");
+                            table.Cell().Text(user.Email ?? "N/A");
+                            table.Cell().Text(user.PhoneNumber ?? "N/A");
+                            table.Cell().Text(user.IsActive ? "Hoạt động" : "Đã khóa");
+                        }
+                    });
+                });
+            });
+
+            using var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/pdf", "Users_List.pdf");
+        }
+
+
+        public async Task<IActionResult> ExportUsersToExcel()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Users");
+
+            // Header
+            worksheet.Cell(1, 1).Value = "Họ và tên";
+            worksheet.Cell(1, 2).Value = "Email";
+            worksheet.Cell(1, 3).Value = "Điện thoại";
+            worksheet.Cell(1, 4).Value = "Trạng thái";
+            worksheet.Cell(1, 5).Value = "Ngày tạo";
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                var user = users[i];
+                worksheet.Cell(i + 2, 1).Value = user.FullName ?? "N/A";
+                worksheet.Cell(i + 2, 2).Value = user.Email ?? "N/A";
+                worksheet.Cell(i + 2, 3).Value = user.PhoneNumber ?? "N/A";
+                worksheet.Cell(i + 2, 4).Value = user.IsActive ? "Hoạt động" : "Đã khóa";
+                worksheet.Cell(i + 2, 5).Value = user.CreatedAt.ToString("dd/MM/yyyy");
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Users.xlsx");
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> IsEmailUnique(string email)
         {
@@ -532,7 +669,52 @@ namespace Travel.Controllers
             return Json(new { exists = user != null });
         }
 
-//================================ Quản lý Tour ==========================================================
+        private async Task<(bool IsSuccess, string? FilePath, string? ErrorMessage)> SaveAvatarAsync(ApplicationUser user, IFormFile avatarFile)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(avatarFile.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return (false, null, "Chỉ cho phép định dạng ảnh: jpg, jpeg, png, gif.");
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"user-{user.Id}-{DateTime.Now.Ticks}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            var virtualPath = $"images/avatars/{uniqueFileName}";
+
+            using (var image = await Image.LoadAsync(avatarFile.OpenReadStream()))
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(200, 200),
+                    Mode = ResizeMode.Crop
+                }));
+
+                var encoder = new JpegEncoder { Quality = 85 };
+                await image.SaveAsync(filePath, encoder);
+            }
+
+            // Xóa avatar cũ nếu có
+            if (!string.IsNullOrEmpty(user.AvatarPath))
+            {
+                var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarPath);
+                if (System.IO.File.Exists(oldFilePath))
+                {
+                    System.IO.File.Delete(oldFilePath);
+                }
+            }
+
+            return (true, virtualPath, null);
+        }
+
+        //================================ Quản lý Tour ==========================================================
         public async Task<IActionResult> ManageTours()
         {
             var tours = await _unitOfWork.Tours.GetAllAsync();

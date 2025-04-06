@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -199,4 +200,48 @@ public class TourController : Controller
 
         return Json(destinations);
     }
+
+    //public async Task<IActionResult> UploadTourImages(int tourId, List<IFormFile> images)
+    //{
+    //    var tour = await _context.Tours.FindAsync(tourId);
+    //    if (tour == null)
+    //    {
+    //        return NotFound();
+    //    }
+
+    //    foreach (var image in images)
+    //    {
+    //        if (image.Length > 0)
+    //        {
+    //            var uploadDirectory = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "tour_images");
+
+    //            if (!Directory.Exists(uploadDirectory))
+    //            {
+    //                Directory.CreateDirectory(uploadDirectory);
+    //            }
+
+    //            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+    //            var filePath = Path.Combine(uploadDirectory, fileName);
+
+    //            using (var fileStream = new FileStream(filePath, FileMode.Create))
+    //            {
+    //                await image.CopyToAsync(fileStream);
+    //            }
+
+    //            // Lưu thông tin vào bảng TourImages
+    //            var tourImage = new TourImage
+    //            {
+    //                TourId = tourId,
+    //                ImageUrl = $"uploads/tour_images/{fileName}",
+    //                UploadDate = DateTime.Now
+    //            };
+
+    //            _context.TourImages.Add(tourImage);
+    //            await _context.SaveChangesAsync();
+    //        }
+    //    }
+
+    //    TempData["Message"] = "Hình ảnh đã được tải lên thành công!";
+    //    return RedirectToAction("Details", new { id = tourId });
+    //}
 }

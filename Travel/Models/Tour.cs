@@ -58,4 +58,5 @@ public partial class Tour
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public virtual ApplicationUser? TourGuide { get; set; }
+    public List<TourImage> TourImages { get; set; }
 }

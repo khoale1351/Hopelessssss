@@ -1,114 +1,127 @@
-﻿@model Travel.Models.ApplicationUser
+﻿@model Travel.ViewModels.UserViewModel
 
 @{
-    ViewData["Title"] = "Edit User";
+    ViewData["Title"] = "Chỉnh sửa người dùng";
     Layout = "_LayoutAdmin";
 }
 
-<!-- Main Content -->
 <div class="container my-5">
-    <h2 class="text-center mb-4">Chỉnh sửa thông tin người dùng</h2>
-
-    <!-- Form chỉnh sửa -->
+    <h2 class="text-center mb-4">Chỉnh sửa người dùng</h2>
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <form asp-controller="Admin" asp-action="EditUser" method="post" class="card p-4 shadow-lg">
-                <!-- Hidden field để giữ Id -->
-                <input type="hidden" asp-for="Id" />
+        <div class="col-md-10 col-lg-8">
+            <form asp-action="EditUser" asp-controller="Admin" method="post" enctype="multipart/form-data" class="card p-4 shadow-lg">
+                <input type="hidden" name="id" value="@ViewBag.UserId" />
 
-                <!-- FullName -->
-                <div class="mb-3">
-                    <label asp-for="FullName" class="form-label">Họ và tên</label>
-                    <input asp-for="FullName" class="form-control" required />
-                    <span asp-validation-for="FullName" class="text-danger"></span>
-                </div>
+                <div class="row">
+                    <!-- Avatar -->
+                    <div class="col-md-4 mb-4 text-center">
+                        <div class="position-relative">
+                            <img id="avatarPreview"
+                                 src="~/@ViewBag.CurrentAvatar"
+                                 class="img-thumbnail rounded-circle shadow"
+                                 style="width: 180px; height: 180px; object-fit: cover; transition: 0.3s;" />
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold">Cập nhật ảnh đại diện</label>
+                            <input asp-for="AvatarFile"
+                                   type="file"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewImage(event)" />
+                            <span asp-validation-for="AvatarFile" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-                <!-- Email -->
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" type="email" required />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-
-                <!-- PhoneNumber -->
-                <div class="mb-3">
-                    <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
-                    <input asp-for="PhoneNumber" class="form-control" type="tel" />
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                </div>
-
-                <!-- DateOfBirth -->
-                <div class="mb-3">
-                    <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
-                    <input asp-for="DateOfBirth" class="form-control" type="date" />
-                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
-                </div>
-
-                <!-- Address -->
-                <div class="mb-3">
-                    <label asp-for="Address" class="form-label">Địa chỉ</label>
-                    <input asp-for="Address" class="form-control" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
-
-                <!-- MembershipType -->
-                <div class="mb-3">
-                    <label asp-for="MembershipType" class="form-label">Loại thành viên</label>
-                    <select asp-for="MembershipType" class="form-control" required>
-                        <option value="Silver">Silver</option>
-                        <option value="Gold">Gold</option>
-                        <option value="Platinum">Platinum</option>
-                    </select>
-                    <span asp-validation-for="MembershipType" class="text-danger"></span>
-                </div>
-
-                <!-- Status -->
-                <div class="mb-3">
-                    <label asp-for="Status" class="form-label">Trạng thái</label>
-                    <select asp-for="Status" class="form-control" required>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
-                    <span asp-validation-for="Status" class="text-danger"></span>
-                </div>
-
-                <!-- IsActive -->
-                <div class="mb-3 form-check">
-                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                    <label asp-for="IsActive" class="form-check-label">Kích hoạt tài khoản</label>
-                    <span asp-validation-for="IsActive" class="text-danger"></span>
-                </div>
-
-                <!-- Nút Submit và Cancel -->
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                    <a asp-controller="Admin" asp-action="ManageUsers" class="btn btn-secondary">Hủy</a>
+                    <!-- Thông tin người dùng -->
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <!-- Họ và tên -->
+                            <div class="col-md-12">
+                                <label asp-for="FullName" class="form-label">Họ và tên</label>
+                                <input asp-for="FullName" class="form-control" required />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <!-- Email -->
+                            <div class="col-md-12">
+                                <label asp-for="Email" class="form-label">Email</label>
+                                <input asp-for="Email" class="form-control" type="email" required />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <!-- Số điện thoại -->
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                            <!-- Ngày sinh -->
+                            <div class="col-md-6">
+                                <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+                            <!-- Địa chỉ -->
+                            <div class="col-md-12">
+                                <label asp-for="Address" class="form-label">Địa chỉ</label>
+                                <input asp-for="Address" class="form-control" />
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+                            <!-- Loại thành viên -->
+                            <div class="col-md-6">
+                                <label asp-for="MembershipType" class="form-label">Loại thành viên</label>
+                                <select asp-for="MembershipType" class="form-select">
+                                    <option value="Silver">Silver</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="Platinum">Platinum</option>
+                                    <option value="Diamond">Diamond</option>
+                                </select>
+                                <span asp-validation-for="MembershipType" class="text-danger small"></span>
+                            </div>
+                            <!-- Vai trò -->
+                            <div class="col-md-6">
+                                <label asp-for="Role" class="form-label">Vai trò</label>
+                                <select asp-for="Role" class="form-select" asp-items="ViewBag.RoleList">
+                                    <option value="">Chọn vai trò</option>
+                                </select>
+                                <span asp-validation-for="Role" class="text-danger small"></span>
+                                @if (!string.IsNullOrEmpty(Model.Role))
+                                {
+                                    <span class="badge bg-info mt-1">Vai trò hiện tại: @Model.Role</span>
+                                }
+                            </div>
+                            <!-- Hiển thị trạng thái (badge) -->
+                            <div class="col-md-12">
+                                <label class="form-label">Trạng thái tài khoản</label>
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Đã khoá</span>
+                                }
+                            </div>
+                            <!-- Nút lưu -->
+                            <div class="col-md-12 mt-4">
+                                <button type="submit" class="btn btn-success w-100">💾 Lưu thay đổi</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
-
-            <!-- Thông tin bổ sung (khóa/mở khóa tài khoản) -->
-            <div class="card mt-3 p-3 shadow-lg">
-                <h5>Quản lý trạng thái khóa tài khoản</h5>
-                @if (ViewBag.IsLockedOut)
-                {
-                    <form asp-controller="Admin" asp-action="UnlockUser" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-success">Mở khóa tài khoản</button>
-                    </form>
-                }
-                else
-                {
-                    <form asp-controller="Admin" asp-action="LockUser" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-warning">Khóa tài khoản</button>
-                    </form>
-                }
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Thêm script validation -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var output = document.getElementById('avatarPreview');
+                output.src = reader.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 }

@@ -1,7 +1,8 @@
 ﻿@model Travel.Models.Tour
 
-<form id="editTourForm" method="post" enctype="multipart/form-data">
+<form id="editTourForm" method="post" enctype="multipart/form-data" onsubmit="return validateTourForm()">
     <input type="hidden" name="TourId" value="@Model.TourId" />
+    <input type="hidden" id="currentDuration" value="@Model.Duration" />
 
     <div class="row">
         <div class="col-md-6">
@@ -38,7 +39,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Thời gian (ngày)</label>
-                <input type="number" class="form-control" name="Duration" value="@Model.Duration" min="1" required>
+                <input type="number" class="form-control" id="Duration" name="Duration" value="@Model.Duration" min="1" required>
             </div>
 
             <div class="mb-3">
@@ -48,12 +49,13 @@
 
             <div class="mb-3">
                 <label class="form-label">Ngày bắt đầu</label>
-                <input type="date" class="form-control" name="StartDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" required>
+                <input type="date" class="form-control" id="StartDate" name="StartDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" required onchange="calculateEndDate()">
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Ngày kết thúc</label>
-                <input type="date" class="form-control" name="EndDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" required>
+                <input type="date" class="form-control" id="EndDate" name="EndDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" required onchange="validateDates()">
+                <small id="dateError" class="text-danger"></small>
             </div>
 
             <div class="mb-3">
@@ -88,3 +90,68 @@
         </div>
     </div>
 </form>
+
+<script>
+    function calculateEndDate() {
+        const startDate = new Date(document.getElementById('StartDate').value);
+        const duration = parseInt(document.getElementById('Duration').value);
+
+        if (!isNaN(startDate.getTime()) && !isNaN(duration)) {
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + duration - 1);
+
+            const endDateString = endDate.toISOString().split('T')[0];
+            document.getElementById('EndDate').value = endDateString;
+        }
+    }
+
+    function validateDates() {
+        const startDate = new Date(document.getElementById('StartDate').value);
+        const endDate = new Date(document.getElementById('EndDate').value);
+        const durationInput = document.getElementById('Duration');
+        const dateError = document.getElementById('dateError');
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return;
+        }
+
+        // Calculate difference in days
+        const timeDiff = endDate - startDate;
+        const dayDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+        if (startDate > endDate) {
+            dateError.textContent = "Ngày về phải sau ngày đi";
+            return false;
+        }
+
+        if (dayDiff > 30) {
+            dateError.textContent = "Tour không được quá 30 ngày";
+            return false;
+        }
+
+        // Update duration to match the selected dates
+        durationInput.value = dayDiff;
+        dateError.textContent = "";
+        return true;
+    }
+
+    function validateTourForm() {
+        if (!validateDates()) {
+            return false;
+        }
+
+        // Check required fields
+        const requiredFields = document.querySelectorAll('#editTourForm [required]');
+        for (const field of requiredFields) {
+            if (!field.value.trim()) {
+                alert(`Vui lòng điền đầy đủ thông tin bắt buộc`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Initialize event listeners
+    document.getElementById('Duration').addEventListener('change', calculateEndDate);
+</script>

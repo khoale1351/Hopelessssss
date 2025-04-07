@@ -259,4 +259,19 @@ public class TourController : Controller
             return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
         }
     }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(int id)
+    {
+        var tour = await _context.Tours
+            .Include(t => t.Destination)
+            .FirstOrDefaultAsync(t => t.TourId == id);
+
+        if (tour == null)
+        {
+            return NotFound();
+        }
+
+        return View(tour);
+    }
 }

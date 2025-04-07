@@ -1,14 +1,492 @@
-﻿@{
-    ViewData["Title"] = "Create Post";
+﻿@model Travel.ViewModels.ForumPostViewModel
+@{
+    ViewData["Title"] = "Đăng bài mới";
 }
 
-<h2>Create New Post</h2>
-<form method="post" action="/Forum/Create">
-    <label for="title">Title:</label>
-    <input type="text" id="title" name="title" required>
+<style>
+    /* Hiệu ứng cho toàn bộ trang */
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    }
+    
+    /* Hiệu ứng cho container */
+    .container-fluid {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Hiệu ứng cho card */
+    .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        z-index: 1;
+        pointer-events: none;
+    }
+    
+    /* Hiệu ứng cho card header */
+    .card-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border-radius: 16px 16px 0 0 !important;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        animation: shine 3s infinite;
+    }
+    
+    @@keyframes shine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .card-header h4 {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Hiệu ứng cho card body */
+    .card-body {
+        padding: 2.5rem;
+        background: #fff;
+    }
+    
+    /* Hiệu ứng cho form controls */
+    .form-control {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        padding: 14px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13,110,253,.15);
+        transform: translateY(-2px);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    
+    .form-control:focus ~ .form-label {
+        color: #0d6efd;
+    }
+    
+    /* Hiệu ứng cho CKEditor */
+    .ck-editor__editable {
+        min-height: 400px;
+        max-height: 600px;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .ck.ck-editor__main>.ck-editor__editable:focus {
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08) !important;
+    }
+    
+    /* Hiệu ứng cho buttons */
+    .btn {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+        z-index: -1;
+    }
+    
+    .btn:hover::before {
+        transform: translateX(100%);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
+        border: none;
+        box-shadow: 0 4px 15px rgba(13,110,253,0.3);
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0a58ca, #084298);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(13,110,253,0.4);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(45deg, #6c757d, #495057);
+        border: none;
+        box-shadow: 0 4px 15px rgba(108,117,125,0.3);
+    }
+    
+    .btn-secondary:hover {
+        background: linear-gradient(45deg, #495057, #343a40);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(108,117,125,0.4);
+    }
+    
+    /* Hiệu ứng cho checkboxes */
+    .form-check {
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check:hover {
+        transform: translateX(5px);
+    }
+    
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        margin-top: 4px;
+        border: 2px solid #adb5bd;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        animation: pulse 0.5s;
+    }
+    
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    
+    .form-check-label {
+        margin-left: 10px;
+        color: #495057;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check:hover .form-check-label {
+        color: #0d6efd;
+    }
+    
+    /* Hiệu ứng cho category section */
+    .category-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin-top: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .category-section:hover {
+        box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+    
+    /* Hiệu ứng cho validation messages */
+    .text-danger {
+        font-weight: 500;
+        animation: shake 0.5s;
+    }
+    
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    /* Hiệu ứng cho icons */
+    .fas {
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover .fas {
+        transform: scale(1.2);
+    }
+    
+    /* Hiệu ứng cho form groups */
+    .mb-4 {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .mb-4:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Hiệu ứng cho container */
+    .container-fluid {
+        position: relative;
+    }
+    
+    .container-fluid::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(13,110,253,0.1) 0%, rgba(13,110,253,0) 70%);
+        border-radius: 50%;
+        z-index: -1;
+    }
+    
+    .container-fluid::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(13,110,253,0.1) 0%, rgba(13,110,253,0) 70%);
+        border-radius: 50%;
+        z-index: -1;
+    }
+    
+    /* Thêm class btn-spacing bị thiếu */
+    .btn-spacing {
+        margin: 0 10px;
+    }
+    
+    /* Thêm hiệu ứng cho form elements khi load */
+    .form-control, .btn, .form-check {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    
+    .form-container {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+    }
+    
+    .btn-primary::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+        );
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+    }
+    
+    @@keyframes shine {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+    }
+</style>
 
-    <label for="content">Content:</label>
-    <textarea id="content" name="content" rows="4" required></textarea>
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Đăng bài mới</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" id="createPostForm">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label asp-for="Title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề bài viết..." required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
 
-    <button type="submit">Post</button>
-</form>
+                        <div class="mb-4">
+                            <label asp-for="Content" class="form-label">Nội dung <span class="text-danger">*</span></label>
+                            <textarea asp-for="Content" id="editor" class="form-control" required></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            <div class="category-section">
+                                <div class="row">
+                                    @if (ViewBag.Categories != null && ViewBag.Categories.Count > 0)
+                                    {
+                                        @foreach (var category in ViewBag.Categories)
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input type="checkbox" name="CategoryIds" value="@category.CategoryId" 
+                                                           class="form-check-input" id="category_@category.CategoryId">
+                                                    <label class="form-check-label" for="category_@category.CategoryId">
+                                                        @category.Name
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                Chưa có danh mục nào. Vui lòng liên hệ admin để được hỗ trợ.
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="@Url.Action("Index", "Forum")" class="btn btn-secondary btn-spacing">
+                                <i class="fas fa-arrow-left me-2"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-spacing" id="submitButton">
+                                <i class="fas fa-paper-plane me-2"></i> Đăng bài
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdn.ckeditor.com/4.16.2/full/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/4.16.2/full/lang/vi.js"></script>
+    <script>
+        var editor = CKEDITOR.replace('editor', {
+            height: 400,
+            removePlugins: 'elementspath,resize',
+            toolbarGroups: [
+                { name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+                { name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+                { name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+                { name: 'forms', groups: [ 'forms' ] },
+                '/',
+                { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+                { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+                { name: 'links', groups: [ 'links' ] },
+                { name: 'insert', groups: [ 'insert' ] },
+                '/',
+                { name: 'styles', groups: [ 'styles' ] },
+                { name: 'colors', groups: [ 'colors' ] },
+                { name: 'tools', groups: [ 'tools' ] },
+                { name: 'others', groups: [ 'others' ] }
+            ],
+            removeButtons: '',
+            format_tags: 'p;h1;h2;h3;pre',
+            removeDialogTabs: 'image:advanced;link:advanced',
+            extraPlugins: 'justify,font,colorbutton,find,selectall',
+            language: 'vi',
+            filebrowserUploadUrl: '/Forum/UploadImage',
+            filebrowserImageUploadUrl: '/Forum/UploadImage'
+        });
+        
+        // Sửa lỗi JavaScript - Thêm hiệu ứng cho form khi load
+        document.addEventListener('DOMContentLoaded', function() {
+            const formElements = document.querySelectorAll('.form-control, .btn, .form-check');
+            formElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+
+            // Xử lý submit form
+            document.getElementById('createPostForm').addEventListener('submit', function(e) {
+                // Kiểm tra tiêu đề
+                var title = document.getElementById('Title').value.trim();
+                if (!title) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập tiêu đề bài viết');
+                    return false;
+                }
+
+                // Kiểm tra nội dung
+                var content = editor.getData().trim();
+                if (!content) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập nội dung bài viết');
+                    return false;
+                }
+
+                // Kiểm tra danh mục
+                var categories = document.querySelectorAll('input[type="checkbox"]:checked');
+                if (categories.length === 0) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ít nhất một danh mục');
+                    return false;
+                }
+
+                // Nếu tất cả đều hợp lệ, cho phép form submit
+                return true;
+            });
+        });
+    </script>
+}

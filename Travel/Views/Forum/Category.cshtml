@@ -1,0 +1,71 @@
+@model IEnumerable<Travel.ViewModels.ForumPostViewModel>
+@{
+    ViewData["Title"] = ViewBag.Category.Name;
+}
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Danh mục -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Thông tin danh mục</h4>
+                </div>
+                <div class="card-body">
+                    <h5>@ViewBag.Category.Name</h5>
+                    <p class="text-muted">@ViewBag.Category.Description</p>
+                    <a href="@Url.Action("Index", "Forum")" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách bài viết -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Bài viết trong danh mục</h4>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a href="@Url.Action("Create", "Forum")" class="btn btn-light">Đăng bài</a>
+                    }
+                </div>
+                <div class="list-group list-group-flush">
+                    @if (Model.Any())
+                    {
+                        @foreach (var post in Model)
+                        {
+                            <a href="@Url.Action("Post", "Forum", new { id = post.PostId })" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        @if (post.IsPinned)
+                                        {
+                                            <span class="badge bg-warning me-2">📌</span>
+                                        }
+                                        @post.Title
+                                    </h5>
+                                    <small>@post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <p class="mb-1">
+                                    <small>
+                                        Đăng bởi: @post.UserName |
+                                        Lượt xem: @post.ViewCount |
+                                        Bình luận: @post.CommentCount
+                                    </small>
+                                </p>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <div class="list-group-item">
+                            <p class="text-center text-muted my-3">Chưa có bài viết nào trong danh mục này.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -28,7 +28,7 @@ namespace Travel.Repositories.IMAGESERVICE
                 Directory.CreateDirectory(uploadsFolder);
             }
 
-            var uniqueFileName = $"{filePrefix}-{DateTime.Now.Ticks}{extension}";
+            var uniqueFileName = $"{filePrefix}-{DateTime.Now.Ticks}.jpg";
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
             var virtualPath = Path.Combine(subFolder, uniqueFileName).Replace("\\", "/");
 
@@ -48,7 +48,7 @@ namespace Travel.Repositories.IMAGESERVICE
             }
 
             // Xóa ảnh cũ nếu có
-            if (!string.IsNullOrEmpty(oldFilePath))
+            if (!string.IsNullOrEmpty(oldFilePath)) 
             {
                 var oldPhysicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldFilePath);
                 if (System.IO.File.Exists(oldPhysicalPath))

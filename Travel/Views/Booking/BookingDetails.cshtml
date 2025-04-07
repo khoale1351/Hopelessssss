@@ -1,0 +1,123 @@
+﻿@model Travel.Models.Booking
+
+@{
+    ViewData["Title"] = "Chi tiết Đặt Tour";
+    Layout = "_LayoutAdmin";
+}
+
+<div class="container my-5">
+    <h2 class="mb-4">Chi tiết Đặt Tour</h2>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-bookmark-fill me-2"></i>Thông tin Đặt Tour</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Người dùng:</dt>
+                <dd class="col-sm-9">@Model.User?.FullName</dd>
+
+                <dt class="col-sm-3">Tour:</dt>
+                <dd class="col-sm-9">@Model.Tour?.TourName</dd>
+
+                <dt class="col-sm-3">Số người lớn:</dt>
+                <dd class="col-sm-9">@Model.NumberOfAdults</dd>
+
+                <dt class="col-sm-3">Số trẻ em:</dt>
+                <dd class="col-sm-9">@Model.NumberOfChildren</dd>
+
+                <dt class="col-sm-3">Tổng giá:</dt>
+                <dd class="col-sm-9">@Model.TotalPrice.ToString("C")</dd>
+
+                <dt class="col-sm-3">Ngày đặt:</dt>
+                <dd class="col-sm-9">@Model.BookingDate.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3">Trạng thái:</dt>
+                <dd class="col-sm-9">
+                    @switch (Model.Status)
+                    {
+                        case "Pending":
+                            <span class="badge bg-warning">Chờ xử lý</span>
+                            break;
+                        case "Confirmed":
+                            <span class="badge bg-success">Đã xác nhận</span>
+                            break;
+                        case "Cancelled":
+                            <span class="badge bg-danger">Đã hủy</span>
+                            break;
+                        case "Completed":
+                            <span class="badge bg-primary">Hoàn thành</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">@Model.Status</span>
+                            break;
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Thanh toán:</dt>
+                <dd class="col-sm-9">
+                    @switch (Model.PaymentStatus)
+                    {
+                        case "Pending":
+                            <span class="badge bg-warning">Chưa thanh toán</span>
+                            break;
+                        case "Paid":
+                            <span class="badge bg-success">Đã thanh toán</span>
+                            break;
+                        case "Refunded":
+                            <span class="badge bg-info">Đã hoàn tiền</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">@(Model.PaymentStatus ?? "N/A")</span>
+                            break;
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Ngày bắt đầu:</dt>
+                <dd class="col-sm-9">@Model.StartDate.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3">Voucher:</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Voucher != null)
+                    {
+                        @Model.Voucher.Code
+                    }
+                    else
+                    {
+                        @:N/A
+                    }
+                </dd>
+
+
+                <dt class="col-sm-3">Giảm giá:</dt>
+                <dd class="col-sm-9">@Model.DiscountAmountApplied?.ToString("C")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <h3 class="mt-4">Lịch sử thay đổi trạng thái</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Trạng thái cũ</th>
+                    <th>Trạng thái mới</th>
+                    <th>Người thay đổi</th>
+                    <th>Thời gian thay đổi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model.BookingLogs.OrderByDescending(b => b.ChangedAt))
+                {
+                    <tr>
+                        <td>@log.OldStatus</td>
+                        <td>@log.NewStatus</td>
+                        <td>@log.ChangedByNavigation?.FullName ?? "N/A"</td>
+                        <td>@log.ChangedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

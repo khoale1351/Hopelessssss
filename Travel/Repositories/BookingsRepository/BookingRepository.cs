@@ -41,5 +41,27 @@ namespace Travel.Repositories.BookingsRepository
                 .Where(b => b.User.Email == userEmail)
                 .ToListAsync();
         }
-    } // Thêm dấu } ở đây
+
+        public async Task<IEnumerable<Booking>> GetBookingsAsync(string searchQuery)
+        {
+            // Kiểm tra nếu có searchQuery, lọc theo người dùng hoặc tour
+            var query = _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Tour)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                query = query.Where(b => b.User.FullName.Contains(searchQuery) || b.Tour.TourName.Contains(searchQuery));
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public IQueryable<Booking> GetBookingsQueryable()
+        {
+            return _context.Bookings.Include(b => b.User).Include(b => b.Tour);
+        }
+
+    }
 }

@@ -12,5 +12,7 @@ namespace Travel.Repositories.BookingsRepository
         Task<int> CountAsync();
         Task<IEnumerable<Booking>> GetAllAsync(Func<IQueryable<Booking>, IQueryable<Booking>> filter);
         Task<IEnumerable<Booking>> GetBookingsByUserAsync(string userEmail);
+        Task<IEnumerable<Booking>> GetBookingsAsync(string searchQuery);
+        IQueryable<Booking> GetBookingsQueryable();
     }
 }

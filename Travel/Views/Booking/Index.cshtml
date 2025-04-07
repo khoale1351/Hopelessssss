@@ -20,6 +20,9 @@
             {
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm">
+                        <div class="tour-status-badge @(booking.Tour.EndDate < DateTime.Now ? "completed" : "not-completed")">
+                            @(booking.Tour.EndDate < DateTime.Now ? "Đã Hoàn Thành" : "Chưa Hoàn Thành")
+                        </div>
                         <div class="card-body">
                             <h5 class="card-title">@booking.Tour.TourName</h5>
                             <p class="card-text"><strong>Điểm Đến:</strong> @booking.Tour.Destination?.Name</p>
@@ -59,4 +62,28 @@
             console.log("Booking Index page loaded!");
         });
     </script>
+}
+@section Styles {
+    <style>
+        .tour-status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid #ddd;
+        }
+
+            .tour-status-badge.completed {
+                background-color: #28a745; /* Green for Completed */
+                color: white;
+            }
+
+            .tour-status-badge.not-completed {
+                background-color: #dc3545; /* Red for Not Completed */
+                color: white;
+            }
+    </style>
 }

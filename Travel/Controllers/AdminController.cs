@@ -402,12 +402,43 @@ namespace Travel.Controllers
                 user.AvatarPath = avatarResult.FilePath;
             }
 
+            // Kiểm tra tên có được nhập
+            if (string.IsNullOrEmpty(model.FullName))
+            {
+                ModelState.AddModelError("FullName", "Họ và Tên không để trống!");
+                await LoadEditUserViewBags(user);
+                return View("Users/EditUser", model);
+            }
+
+            if (string.IsNullOrEmpty(model.Email))
+            {
+                ModelState.AddModelError("Email", "Email không để trống!");
+                await LoadEditUserViewBags(user);
+                return View("Users/EditUser", model);
+            }
+
+            // Kiểm tra Email hợp lệ
+            if (!new EmailAddressAttribute().IsValid(model.Email))
+            {
+                ModelState.AddModelError("Email", "Email không hợp lệ.");
+                await LoadEditUserViewBags(user);
+                return View("Users/EditUser", model);
+            }
+
+            // Kiểm tra số điện thoại hợp lệ (nếu có nhập)
+            if (!string.IsNullOrEmpty(model.PhoneNumber) && !Regex.IsMatch(model.PhoneNumber, @"^0\d{9,10}$"))
+            {
+                ModelState.AddModelError("PhoneNumber", "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.");
+                await LoadEditUserViewBags(user);
+                return View("Users/EditUser", model);
+            }
+
             // Cập nhật thông tin người dùng
             user.FullName = model.FullName;
             user.Email = model.Email;
-            user.PhoneNumber = model.PhoneNumber;
+            user.PhoneNumber = model.PhoneNumber; // Có thể để trống
             user.DateOfBirth = model.DateOfBirth;
-            user.Address = model.Address;
+            user.Address = model.Address; // Có thể để trống
             user.MembershipType = model.MembershipType;
 
             // Cập nhật vai trò người dùng
@@ -433,7 +464,6 @@ namespace Travel.Controllers
             await LoadEditUserViewBags(user);
             return View("Users/EditUser", model);
         }
-
 
         private async Task LoadEditUserViewBags(ApplicationUser user)
         {

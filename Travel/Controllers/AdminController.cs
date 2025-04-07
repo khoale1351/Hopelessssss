@@ -99,9 +99,9 @@ namespace Travel.Controllers
         }
 
         // Giữ nguyên Index cũ làm redirect
-        public IActionResult Index()
+        public IActionResult IndexAdmin()
         {
-            return RedirectToAction("Dashboard");
+            return View();
         }
 
 //================================ Quản lý Người dùng (User) =====================================================

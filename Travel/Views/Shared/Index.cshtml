@@ -42,8 +42,6 @@
                                 <i class="fas fa-user-circle"></i> @user.FullName
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/Admin/Profile">Hồ sơ</a></li>
-                                <li><a class="dropdown-item" href="/Admin/Settings">Cài đặt</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Đăng xuất</a></li>
                             </ul>
@@ -56,12 +54,12 @@
 
     <div class="d-flex">
         <!-- Sidebar(sticky) -->
-        <nav class="bg-dark text-white p-3 sidebar" 
-            style="width: 250px; 
-            position: sticky; 
-            top: 56px;
-            height: calc(100vh - 56px);
-            overflow-y: auto;/">
+        <nav class="bg-dark text-white p-3 sidebar"
+             style="width: 250px;
+                position: sticky;
+                top: 56px;
+                height: calc(100vh - 56px);
+                overflow-y: auto;/">
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link text-white" asp-controller="Admin" asp-action="Dashboard">
@@ -69,13 +67,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" asp-controller="Admin" asp-action="ManageUsers">
-                        <i class="fas fa-users"></i> Người dùng
+                    <a class="nav-link text-white" asp-controller="Admin" asp-action="ManageTours">
+                        <i class="fas fa-map"></i> Tour
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" asp-controller="Admin" asp-action="ManageTours">
-                        <i class="fas fa-map"></i> Tour
+                    <a class="nav-link text-white" asp-controller="Admin" asp-action="ManageUsers">
+                        <i class="fas fa-users"></i> Người dùng
                     </a>
                 </li>
                 <li class="nav-item">
@@ -90,8 +88,6 @@
                 </li>
             </ul>
         </nav>
-
-        <!-- Content -->
         <main class="container-fluid p-4 flex-grow-1">
             @RenderBody()
         </main>

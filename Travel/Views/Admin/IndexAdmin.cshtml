@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Welcome to Admin Panel";
+
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4 text-center">Chào mừng đến với Admin Panel</h1>
+        <p class="lead text-center text-muted">
+            Quản lý toàn bộ hệ thống du lịch của bạn từ đây!
+        </p>
+    </div>
+</div>
+
+<div class="row mt-5 justify-content-center">
+    <!-- Card Dashboard -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Dashboard</h5>
+                <p class="card-text">Xem thống kê và hoạt động gần đây.</p>
+                <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-primary">Xem ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Quản lý Tour -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-map fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Quản lý Tour</h5>
+                <p class="card-text">Thêm, sửa, xóa các tour du lịch.</p>
+                <a asp-controller="Admin" asp-action="ManageTours" class="btn btn-success">Quản lý</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Quản lý Người dùng -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Quản lý Người dùng</h5>
+                <p class="card-text">Quản lý tài khoản và quyền truy cập.</p>
+                <a asp-controller="Admin" asp-action="ManageUsers" class="btn btn-warning">Quản lý</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Quản lý Đặt tour -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-calendar-check fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Quản lý Đặt tour</h5>
+                <p class="card-text">Xem và xử lý các đơn đặt tour.</p>
+                <a asp-controller="Admin" asp-action="ManageBookings" class="btn btn-info">Quản lý</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 justify-content-center">
+    <div class="col-md-8">
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-2"></i>
+            Sử dụng menu bên trái để truy cập các chức năng khác như quản lý Voucher hoặc xem chi tiết hoạt động.
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log("Admin Index page loaded successfully.");
+        });
+    </script>
+}

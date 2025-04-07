@@ -4,11 +4,12 @@ namespace Travel.ViewModels
 {
     public class UserViewModel
     {
-        [Required(ErrorMessage = "Họ và tên là bắt buộc")]
+        public string Id { get; set; }
+        [Required]
         [StringLength(255, ErrorMessage = "Họ và tên không được dài quá 255 ký tự.")]
         public string FullName { get; set; }
 
-        [Required(ErrorMessage = "Email là bắt buộc.")]
+        [Required]
         [EmailAddress(ErrorMessage = "Địa chỉ email không hợp lệ.")]
         [StringLength(255, ErrorMessage = "Email không được dài quá 255 ký tự.")]
         public string Email { get; set; }
@@ -20,12 +21,15 @@ namespace Travel.ViewModels
 
         public DateTime? DateOfBirth { get; set; }
 
+        [Required]
         [StringLength(255, ErrorMessage = "Địa chỉ không được dài quá 255 ký tự.")]
         public string Address { get; set; }
 
         [RegularExpression(@"^0\d{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.")]
+        [Required]
         public string PhoneNumber { get; set; }
 
+        [Required]
         public string Role { get; set; }
 
         public string MembershipType { get; set; } = "Silver";
@@ -33,5 +37,9 @@ namespace Travel.ViewModels
         public bool IsActive { get; set; } = true;
 
         public IFormFile? AvatarFile { get; set; }
+
+        public string? Avatar { get; set; }
+        public string? Gender { get; set; }
+        public string? Bio { get; set; }
     }
 }

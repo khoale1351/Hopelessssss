@@ -13,7 +13,7 @@ namespace Travel.Repositories.Users
     public class UserRepository : GenericRepository<ApplicationUser>, IUserRepository
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly TourismDbContext _context;
+        private new readonly TourismDbContext _context;
 
         public UserRepository(TourismDbContext context, UserManager<ApplicationUser> userManager)
             : base(context)

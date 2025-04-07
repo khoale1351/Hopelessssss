@@ -210,7 +210,7 @@ namespace Travel.Controllers
                 await _context.SaveChangesAsync();
                 _logger.LogInformation($"Đã lưu bài viết với ID: {post.PostId}");
 
-                // Thêm categories
+                // Thêm categories và cập nhật số lượng bài viết
                 if (model.CategoryIds != null && model.CategoryIds.Any())
                 {
                     _logger.LogInformation($"Số danh mục được chọn: {model.CategoryIds.Count}");
@@ -224,10 +224,19 @@ namespace Travel.Controllers
                             CategoryId = categoryId
                         };
                         _context.ForumPostCategories.Add(postCategory);
+
+                        // Cập nhật số lượng bài viết trong danh mục
+                        var category = await _context.ForumCategories.FindAsync(categoryId);
+                        if (category != null)
+                        {
+                            category.PostCount = await _context.ForumPostCategories
+                                .CountAsync(pc => pc.CategoryId == categoryId);
+                            _logger.LogInformation($"Đã cập nhật số lượng bài viết của danh mục {category.Name}: {category.PostCount}");
+                        }
                     }
                     
                     await _context.SaveChangesAsync();
-                    _logger.LogInformation("Đã lưu liên kết bài viết với danh mục");
+                    _logger.LogInformation("Đã lưu liên kết bài viết với danh mục và cập nhật số lượng bài viết");
                 }
                 else
                 {

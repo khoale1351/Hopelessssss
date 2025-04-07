@@ -10,8 +10,8 @@ using Travel.Repositories.PublicRepository;
 namespace Travel.Repositories.BookingsRepository
 {
     public class BookingRepository : GenericRepository<Booking>, IBookingRepository
-    { // Thêm dấu { ở đây
-        private readonly TourismDbContext _context;
+    {
+        private new readonly TourismDbContext _context;
 
         public BookingRepository(TourismDbContext context) : base(context)
         {
@@ -41,5 +41,5 @@ namespace Travel.Repositories.BookingsRepository
                 .Where(b => b.User.Email == userEmail)
                 .ToListAsync();
         }
-    } // Thêm dấu } ở đây
+    }
 }

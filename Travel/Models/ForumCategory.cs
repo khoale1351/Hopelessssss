@@ -14,6 +14,8 @@ namespace Travel.Models
         [StringLength(500)]
         public string Description { get; set; }
 
+        public int PostCount { get; set; }
+
         public virtual ICollection<ForumPostCategory> Posts { get; set; } = new List<ForumPostCategory>();
     }
 } 

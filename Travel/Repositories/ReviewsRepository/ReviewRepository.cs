@@ -11,7 +11,7 @@ namespace Travel.Repositories.ReviewsRepository
 {
     public class ReviewRepository : GenericRepository<Review>, IReviewRepository
     {
-        private readonly TourismDbContext _context;
+        private new readonly TourismDbContext _context;
 
         public ReviewRepository(TourismDbContext context) : base(context)
         {

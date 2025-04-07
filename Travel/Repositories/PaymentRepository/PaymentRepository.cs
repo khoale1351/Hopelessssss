@@ -11,7 +11,7 @@ namespace Travel.Repositories.PaymentRepository
 {
     public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
     {
-        private readonly TourismDbContext _context;
+        private new readonly TourismDbContext _context;
 
         public PaymentRepository(TourismDbContext context) : base(context)
         {

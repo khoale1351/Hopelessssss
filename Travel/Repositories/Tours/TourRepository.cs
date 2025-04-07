@@ -11,7 +11,7 @@ namespace Travel.Repositories.ToursRepository
 {
     public class TourRepository : GenericRepository<Tour>, ITourRepository
     {
-        private readonly TourismDbContext _context;
+        private new readonly TourismDbContext _context;
 
         public TourRepository(TourismDbContext context) : base(context)
         {

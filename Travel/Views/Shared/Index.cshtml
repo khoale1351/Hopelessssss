@@ -34,7 +34,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    @if (SignInManager.IsSignedIn(User))
+                    @if (User?.Identity?.IsAuthenticated == true)
                     {
                         var user = await UserManager.GetUserAsync(User);
                         <li class="nav-item dropdown">

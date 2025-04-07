@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using QuestPDF.Fluent;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -20,10 +19,16 @@ using Travel.ViewModels;
 using X.PagedList.Extensions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using DocumentFormat.OpenXml.InkML;
 using Travel.Repositories.IMAGESERVICE;
 using Travel.Data;
+using Travel.Repositories.BookingsRepository;
+using Travel.Repositories.PaymentRepository;
+using Travel.Repositories.ReviewsRepository;
+using Travel.Repositories.ToursRepository;
+using Travel.Repositories.Users;
+using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace Travel.Controllers
 {
@@ -36,8 +41,9 @@ namespace Travel.Controllers
         private readonly IMemoryCache _cache;
         private readonly IImageService _imageService;
         private readonly TourismDbContext _context;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache, IImageService imageService, TourismDbContext context)
+        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache, IImageService imageService, TourismDbContext context, ILogger<AdminController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
@@ -45,6 +51,7 @@ namespace Travel.Controllers
             _cache = cache;
             _imageService = imageService;
             _context = context;
+            _logger = logger;
         }
 
 //================================ Trang Tổng quan Dasboard =====================================================
@@ -1082,6 +1089,30 @@ namespace Travel.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(ManageForumCategories));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateForumCategoriesPostCount()
+        {
+            try
+            {
+                var categories = await _context.ForumCategories.ToListAsync();
+                foreach (var category in categories)
+                {
+                    category.PostCount = await _context.ForumPostCategories
+                        .CountAsync(pc => pc.CategoryId == category.CategoryId);
+                    _logger.LogInformation($"Cập nhật số lượng bài viết cho danh mục {category.Name}: {category.PostCount}");
+                }
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Đã cập nhật số lượng bài viết cho tất cả danh mục";
+                return RedirectToAction(nameof(ManageForumCategories));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật số lượng bài viết cho danh mục");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi cập nhật số lượng bài viết";
+                return RedirectToAction(nameof(ManageForumCategories));
+            }
         }
     }
 }

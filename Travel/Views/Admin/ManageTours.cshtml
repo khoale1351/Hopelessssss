@@ -53,7 +53,7 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(item.ImageUrl))
                                     {
-                                        <img src="@item.ImageUrl" alt="Ảnh tour" style="width: 80px; height: 60px; object-fit: cover;" class="img-thumbnail" />
+                                        <img src="~/@item.ImageUrl" alt="Ảnh tour" style="width: 80px; height: 60px; object-fit: cover;" class="img-thumbnail" />
                                     }
                                     else
                                     {
@@ -109,7 +109,7 @@
                 <h5 class="modal-title">Thêm Tour Mới</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form asp-action="Create" asp-controller="Admin" method="post" enctype="multipart/form-data">
+            <form asp-action="Create" asp-controller="Tour" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -157,8 +157,8 @@
                         <div class="col-md-6">
                             <label class="form-label" for="TourType">Loại Tour</label>
                             <select class="form-select" id="TourType" name="TourType" required>
-                                <option value="Private">Tour riêng</option>
-                                <option value="Group">Tour nhóm</option>
+                                <option value="Private">Private</option>
+                                <option value="Group">Group</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -238,7 +238,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post" asp-controller="Admin" asp-action="DeleteTour">
+                <form id="deleteForm" method="post" asp-controller="Tour" asp-action="DeleteTour">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="deleteTourId" />
                     <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
@@ -307,7 +307,7 @@
                 width: '100%',
                 dropdownParent: $('#addTourModal'),
                 ajax: {
-                    url: '/Admin/SearchDestinations',
+                    url: '/Tour/SearchDestinations',
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -363,7 +363,7 @@
             $('#detailTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
-                $.get('/Admin/GetTourDetails/' + tourId)
+                $.get('/Tour/GetTourDetails/' + tourId)
                     .done(function(data) {
                         $('#detailTourContent').html(data);
                     })
@@ -376,7 +376,7 @@
             $('#editTourModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var tourId = button.data('id');
-                $.get('/Admin/GetEditTourForm/' + tourId)
+                $.get('/Tour/GetEditTourForm/' + tourId)
                     .done(function(data) {
                         $('#editTourContent').html(data);
                         $('select[name="DestinationId"]').select2({
@@ -394,7 +394,7 @@
                 e.preventDefault();
                 var formData = new FormData(this);
                 $.ajax({
-                    url: '/Admin/EditTour',
+                    url: '/Tour/EditTour',
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -423,7 +423,7 @@
             e.preventDefault();
             var formData = $(this).serialize();
             $.ajax({
-                url: '/Admin/DeleteTour',
+                url: '/Tour/DeleteTour',
                 type: 'POST',
                 data: formData,
                 success: function(response) {

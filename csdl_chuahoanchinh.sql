@@ -33,8 +33,9 @@ VALUES
 ('DISCOUNT10', '10% off on all tours', 0.00, 10.00, 100.00, 50.00, '2025-12-31', 100, 10, 1, '2025-04-01'),
 ('FLAT50', 'Flat $50 discount on bookings over $500', 50.00, NULL, 500.00, NULL, '2025-06-30', 50, 5, 1, '2025-04-01');
 
-	 INSERT INTO Bookings (UserId, TourId, NumberOfAdults, NumberOfChildren, TotalPrice, BookingDate, Status, PaymentStatus, VoucherID, StartDate, DiscountAmountApplied, DiscountPercentageApplied)
+INSERT INTO Bookings (UserId, TourId, NumberOfAdults, NumberOfChildren, TotalPrice, BookingDate, Status, PaymentStatus, VoucherID, StartDate, DiscountAmountApplied, DiscountPercentageApplied)
 VALUES
-( '2ddd5220-3336-417e-b09a-2595fefb28ce', 8, 2, 1, 500.00, '2025-04-01', 'Confirmed', 'Paid', 1, '2025-05-01', NULL, NULL),
-( '528bf958-919a-4e78-9e7b-174d1b8a9874', 9, 1, 0, 300.00, '2025-04-02', 'Pending', 'Pending', 2, '2025-06-10', 50.00, 10.0),
-( 'fe6db55f-c1d1-4eec-9a6e-6b941966914c', 10, 3, 2, 1200.00, '2025-04-03', 'Cancelled', 'Refunded', 1, '2025-07-15', NULL, NULL);
+( '56c42c15-490d-47f6-8b1c-5331888ca7e6', 2, 2, 1, 500.00, '2025-04-01', 'Confirmed', 'Paid', 1, '2025-05-01', NULL, NULL),
+( 'a8476809-0adb-447c-8985-0be398d9ea19', 3, 1, 0, 300.00, '2025-04-02', 'Pending', 'Pending', 2, '2025-06-10', 50.00, 10.0),
+( 'a8476809-0adb-447c-8985-0be398d9ea19', 4, 3, 2, 1200.00, '2025-04-03', 'Cancelled', 'Refunded', 1, '2025-07-15', NULL, NULL);
+

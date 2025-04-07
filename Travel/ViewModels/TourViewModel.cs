@@ -18,5 +18,7 @@ namespace Travel.ViewModels
         public string TourStatus { get; set; } = string.Empty;
         public int Duration { get; set; }
         public IEnumerable<SelectListItem>? DestinationOptions { get; set; }
+
+        public string? ImageUrl { get; set; }
     }
 }

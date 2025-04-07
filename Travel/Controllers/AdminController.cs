@@ -109,11 +109,7 @@ namespace Travel.Controllers
         {
             int pageSize = 10;
             int pageNumber = page ?? 1;
-
             var usersQuery = _userManager.Users.AsQueryable();
-            //var users = await _userManager.Users.ToListAsync();
-            //var roles = _roleManager.Roles.Select(r => r.Name).ToList();
-
             if (!string.IsNullOrEmpty(searchQuery))
             {
                 searchQuery = searchQuery.ToLower();
@@ -890,13 +886,24 @@ namespace Travel.Controllers
         //    }
         //}
 /*========================== Quản lý Đặt Tour (Booking) ====================================================*/
-        public async Task<IActionResult> ManageBookings()
+        public async Task<IActionResult> ManageBookings(string searchQuery, string statusFilter)
         {
-            var bookings = await _unitOfWork.Bookings.GetAllAsync();
+            var bookingsQuery = _unitOfWork.Bookings.GetBookingsQueryable();
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                bookingsQuery = bookingsQuery.Where(b => b.User.FullName.Contains(searchQuery) || b.Tour.TourName.Contains(searchQuery));
+            }
+            if (!string.IsNullOrEmpty(statusFilter))
+            {
+                bookingsQuery = bookingsQuery.Where(b => b.Status == statusFilter);
+            }
+            var bookings = await bookingsQuery.ToListAsync();
+            ViewBag.SearchQuery = searchQuery;
+            ViewBag.StatusFilter = statusFilter;
             return View(bookings);
         }
 
-/*================================ Quản lý Đánh giá (Review) ===============================================*/
+        /*================================ Quản lý Đánh giá (Review) ===============================================*/
         public async Task<IActionResult> ManageReviews()
         {
             var reviews = await _unitOfWork.Reviews.GetAllAsync();

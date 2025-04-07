@@ -9,8 +9,10 @@
     <h1 class="text-center mb-4">@Model.TourName</h1>
     <div class="row">
         <!-- Hình ảnh tour -->
+        <!-- Hình ảnh tour -->
         <div class="col-md-6">
-            <img src="@Model.ImageUrl" class="img-fluid rounded" alt="@Model.TourName" style="max-height: 400px; object-fit: cover;" onerror="this.src='/images/default-tour.jpg';">
+            <img src="@(Model.ImageUrl != null && !string.IsNullOrEmpty(Model.ImageUrl) ? $"/{Model.ImageUrl}" : "/images/default-tour.jpg")"
+                 class="img-fluid rounded" alt="@Model.TourName" style="max-height: 400px; object-fit: cover;" onerror="this.src='/images/default-tour.jpg';">
         </div>
         <!-- Thông tin chi tiết tour -->
         <div class="col-md-6">

@@ -1,117 +1,170 @@
-﻿@model IEnumerable<Travel.Models.Booking>
-
+﻿@using X.PagedList.Mvc.Core
+@model IEnumerable<Travel.Models.Booking>
 @{
     ViewData["Title"] = "Quản lý Đặt Tour";
     Layout = "_LayoutAdmin";
-
 }
 
-<!-- Main Content -->
 <div class="container my-5">
     <h2 class="mb-4">Quản lý Đặt Tour</h2>
 
-    <!-- Thanh tìm kiếm -->
+    <!-- Tìm kiếm và lọc -->
     <div class="row mb-3">
         <div class="col-md-6">
-            <form asp-controller="Admin" asp-action="ManageBookings" method="get" class="d-flex">
-                <input type="text" name="searchQuery" class="form-control me-2" placeholder="Tìm kiếm theo tên người dùng hoặc tour..." value="@ViewBag.SearchQuery" />
-                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <form id="filterForm" method="get" asp-action="ManageBookings" class="d-flex">
+                <input type="text" name="searchQuery" id="searchQuery" class="form-control me-2"
+                       placeholder="Tìm kiếm theo tên người dùng hoặc tour..."
+                       value="@ViewBag.SearchQuery" />
+
+                <select name="statusFilter" id="statusFilter" class="form-select me-2">
+    @{
+        var statusOptions = new List<(string Value, string Label)>
+        {
+            ("", "Tất cả"),
+            ("Pending", "Chờ xử lý"),
+            ("Confirmed", "Đã xác nhận"),
+            ("Cancelled", "Đã hủy"),
+            ("Completed", "Hoàn thành")
+        };
+
+        foreach (var option in statusOptions)
+        {
+            var selectedAttr = (ViewBag.StatusFilter as string) == option.Value ? "selected" : "";
+            @:<option value="@option.Value" @selectedAttr>@option.Label</option>
+        }
+    }
+</select>
             </form>
-        </div>
-
-
-        <!-- Bảng danh sách đặt tour -->
-        <div class="card shadow-lg">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="bi bi-bookmark-fill me-2"></i>Danh sách Đặt Tour</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped table-hover table-bordered">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Booking ID</th>
-                            <th>Người dùng</th>
-                            <th>Tour</th>
-                            <th>Số người lớn</th>
-                            <th>Số trẻ em</th>
-                            <th>Tổng giá</th>
-                            <th>Ngày đặt</th>
-                            <th>Trạng thái</th>
-                            <th>Thanh toán</th>
-                            <th>Ngày bắt đầu</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
-                        {
-                            @foreach (var booking in Model)
-                            {
-                                <tr>
-                                    <td>@booking.BookingId</td>
-                                    <td>@(booking.User?.FullName ?? "N/A")</td>
-                                    <td>@(booking.Tour?.TourName ?? "N/A")</td>
-                                    <td>@booking.NumberOfAdults</td>
-                                    <td>@booking.NumberOfChildren</td>
-                                    <td>@booking.TotalPrice.ToString("C")</td>
-                                    <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
-                                    <td>
-                                        @switch (booking.Status)
-                                        {
-                                            case "Pending":
-                                                <span class="badge bg-warning">Chờ xử lý</span>
-                                                break;
-                                            case "Confirmed":
-                                                <span class="badge bg-success">Đã xác nhận</span>
-                                                break;
-                                            case "Cancelled":
-                                                <span class="badge bg-danger">Đã hủy</span>
-                                                break;
-                                            case "Completed":
-                                                <span class="badge bg-primary">Hoàn thành</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-secondary">@booking.Status</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td>
-                                        @switch (booking.PaymentStatus)
-                                        {
-                                            case "Pending":
-                                                <span class="badge bg-warning">Chưa thanh toán</span>
-                                                break;
-                                            case "Paid":
-                                                <span class="badge bg-success">Đã thanh toán</span>
-                                                break;
-                                            case "Refunded":
-                                                <span class="badge bg-info">Đã hoàn tiền</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-secondary">@(booking.PaymentStatus ?? "N/A")</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td>@booking.StartDate.ToString("dd/MM/yyyy")</td>
-                                    <td>
-                                        <a asp-controller="Admin" asp-action="EditBooking" asp-route-id="@booking.BookingId" class="btn btn-warning btn-sm">Sửa</a>
-                                        <form asp-controller="Admin" asp-action="DeleteBooking" method="post" class="d-inline">
-                                            <input type="hidden" name="id" value="@booking.BookingId" />
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa đặt tour này?')">Xóa</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="11" class="text-center">Không có đặt tour nào.</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 
+    <!-- Danh sách -->
+    <div class="card shadow-lg">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-bookmark-fill me-2"></i>Danh sách Đặt Tour</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Tour</th>
+                        <th>Số người lớn</th>
+                        <th>Số trẻ em</th>
+                        <th>Tổng giá</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th>Thanh toán</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingTable">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var booking in Model)
+                        {
+                            <tr>
+                                <td>@(booking.User?.FullName ?? "N/A")</td>
+                                <td>@(booking.Tour?.TourName ?? "N/A")</td>
+                                <td>@booking.NumberOfAdults</td>
+                                <td>@booking.NumberOfChildren</td>
+                                <td>@booking.TotalPrice.ToString("C")</td>
+                                <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @switch (booking.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-warning">Chờ xử lý</span>
+                                            break;
+                                        case "Confirmed":
+                                            <span class="badge bg-success">Đã xác nhận</span>
+                                            break;
+                                        case "Cancelled":
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                            break;
+                                        case "Completed":
+                                            <span class="badge bg-primary">Hoàn thành</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@booking.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @switch (booking.PaymentStatus)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-warning">Chưa thanh toán</span>
+                                            break;
+                                        case "Paid":
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                            break;
+                                        case "Refunded":
+                                            <span class="badge bg-info">Đã hoàn tiền</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@(booking.PaymentStatus ?? "N/A")</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@booking.StartDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a asp-controller="Booking" asp-action="BookingDetails" asp-route-id="@booking.BookingId" class="btn btn-info btn-sm">Chi tiết</a>
+                                    <a asp-controller="Booking" asp-action="Edit" asp-route-id="@booking.BookingId" class="btn btn-warning btn-sm">Sửa</a>
+                                    <form asp-controller="Booking" asp-action="Delete" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@booking.BookingId" />
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa đặt tour này?')">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center">Không có đặt tour nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pagination .active .page-link {
+        background-color: #198754; /* Bootstrap success green */
+        border-color: #198754;
+        color: white;
+    }
+    .pagination .page-link:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        const searchInput = document.getElementById("searchQuery");
+        const table = document.getElementById("bookingTable");
+
+        searchInput.addEventListener("input", function () {
+            const keyword = this.value.toLowerCase().trim();
+
+            const rows = table.getElementsByTagName("tr");
+            for (let row of rows) {
+                const userCell = row.cells[0]?.innerText.toLowerCase() || "";
+                const tourCell = row.cells[1]?.innerText.toLowerCase() || "";
+
+                const isMatch = userCell.includes(keyword) || tourCell.includes(keyword);
+                row.style.display = isMatch ? "" : "none";
+            }
+        });
+
+        // Lọc theo trạng thái vẫn dùng submit (server-side)
+        document.getElementById("statusFilter").addEventListener("change", function () {
+            document.getElementById("filterForm").submit();
+        });
+    </script>
+}

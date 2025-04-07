@@ -15,7 +15,8 @@
             {
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm">
-                        <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.TourName" style="height: 200px; object-fit: cover;" onerror="this.src='/images/default-tour.jpg';">
+                        <img src="@(tour.ImageUrl != null && !string.IsNullOrEmpty(tour.ImageUrl) ? $"/{tour.ImageUrl}" : "/images/default-tour.jpg")"
+                             class="card-img-top" alt="@tour.TourName" style="height: 200px; object-fit: cover;">
                         <div class="card-body">
                             <h5 class="card-title">@tour.TourName</h5>
                             <p class="card-text">@tour.Description</p>
@@ -40,4 +41,3 @@
         </div>
     }
 </div>
-

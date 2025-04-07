@@ -344,13 +344,8 @@ namespace Travel.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
-
-            // Lấy vai trò của người dùng
             var userRoles = await _userManager.GetRolesAsync(user);
-
-            // Lấy danh sách tất cả vai trò từ RoleManager
             var allRoles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
-
             if (user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow)
             {
                 user.Status = "Inactive";
@@ -361,8 +356,6 @@ namespace Travel.Controllers
                 user.Status = "Active";
                 user.IsActive = true;
             }
-
-            // Khởi tạo model UserViewModel
             var model = new UserViewModel
             {
                 FullName = user.FullName,
@@ -373,14 +366,10 @@ namespace Travel.Controllers
                 MembershipType = user.MembershipType,
                 Status = user.Status,
                 IsActive = user.IsActive,
-                Role = userRoles.FirstOrDefault() // Chọn vai trò đầu tiên trong danh sách người dùng
+                Role = userRoles.FirstOrDefault()
             };
-
-            // Truyền dữ liệu vào ViewBag
-            ViewBag.RoleList = new SelectList(allRoles, model.Role); // Đảm bảo vai trò hiện tại được chọn
-
+            ViewBag.RoleList = new SelectList(allRoles, model.Role);
             await LoadEditUserViewBags(user);
-
             return View("Users/EditUser", model);
         }
 
@@ -390,13 +379,15 @@ namespace Travel.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
+            string? oldAvatarPath = user.AvatarPath;
             if (model.AvatarFile != null && model.AvatarFile.Length > 0)
             {
                 var avatarResult = await _imageService.SaveImageAsync(
                     model.AvatarFile,
                     "images/avatars",
                     filePrefix: "user",
-                    targetSize: new Size(200, 200) // Kích thước cần resize cho avatar
+                    oldFilePath: oldAvatarPath,
+                    targetSize: new Size(200, 200)
                 );
                 if (!avatarResult.IsSuccess)
                 {
@@ -596,7 +587,6 @@ namespace Travel.Controllers
             return File(stream.ToArray(), "application/pdf", $"{user.FullName ?? "User"}_Details.pdf");
         }
 
-
         public async Task<IActionResult> ExportAllUsersToPdf()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -643,7 +633,6 @@ namespace Travel.Controllers
             return File(stream.ToArray(), "application/pdf", "Users_List.pdf");
         }
 
-
         public async Task<IActionResult> ExportUsersToExcel()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -683,282 +672,238 @@ namespace Travel.Controllers
             return Json(new { exists = user != null });
         }
 
-        //private async Task<(bool IsSuccess, string? FilePath, string? ErrorMessage)> SaveAvatarAsync(ApplicationUser user, IFormFile avatarFile)
-        //{
-        //    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        //    var extension = Path.GetExtension(avatarFile.FileName).ToLower();
-
-        //    if (!allowedExtensions.Contains(extension))
-        //    {
-        //        return (false, null, "Chỉ cho phép định dạng ảnh: jpg, jpeg, png, gif.");
-        //    }
-
-        //    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
-        //    if (!Directory.Exists(uploadsFolder))
-        //    {
-        //        Directory.CreateDirectory(uploadsFolder);
-        //    }
-
-        //    var uniqueFileName = $"user-{user.Id}-{DateTime.Now.Ticks}{extension}";
-        //    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-        //    var virtualPath = $"images/avatars/{uniqueFileName}";
-
-        //    using (var image = await Image.LoadAsync(avatarFile.OpenReadStream()))
-        //    {
-        //        image.Mutate(x => x.Resize(new ResizeOptions
-        //        {
-        //            Size = new Size(200, 200),
-        //            Mode = ResizeMode.Crop
-        //        }));
-
-        //        var encoder = new JpegEncoder { Quality = 85 };
-        //        await image.SaveAsync(filePath, encoder);
-        //    }
-
-        //    // Xóa avatar cũ nếu có
-        //    if (!string.IsNullOrEmpty(user.AvatarPath))
-        //    {
-        //        var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarPath);
-        //        if (System.IO.File.Exists(oldFilePath))
-        //        {
-        //            System.IO.File.Delete(oldFilePath);
-        //        }
-        //    }
-
-        //    return (true, virtualPath, null);
-        //}
-
-        //================================ Quản lý Tour ==========================================================
+/*================================ Quản lý Tour ==========================================================*/
         public async Task<IActionResult> ManageTours()
         {
             var tours = await _unitOfWork.Tours.GetAllAsync();
             return View(tours);
         }
-        [HttpGet]
-        public async Task<IActionResult> SearchDestinations(string searchTerm)
-        {
-            try
-            {
-                var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
-                var results = destinations
-                    .Where(d => string.IsNullOrEmpty(searchTerm) ||
-                                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                (d.City != null && d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-                                (d.Country != null && d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-                    .Select(d => new
-                    {
-                        destinationId = d.DestinationId,
-                        name = d.Name,
-                        city = d.City,
-                        country = d.Country
-                    })
-                    .Take(50)
-                    .ToList();
+        //[HttpGet]
+        //public async Task<IActionResult> SearchDestinations(string searchTerm)
+        //{
+        //    try
+        //    {
+        //        var destinations = await _unitOfWork.Destinations.GetAllAsync();
 
-                return Json(results);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
-            }
-        }
+        //        var results = destinations
+        //            .Where(d => string.IsNullOrEmpty(searchTerm) ||
+        //                        d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        //                        (d.City != null && d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+        //                        (d.Country != null && d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+        //            .Select(d => new
+        //            {
+        //                destinationId = d.DestinationId,
+        //                name = d.Name,
+        //                city = d.City,
+        //                country = d.Country
+        //            })
+        //            .Take(50)
+        //            .ToList();
 
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View(new TourViewModel());
-        }
+        //        return Json(results);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+        //    }
+        //}
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TourViewModel model)
-        {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var newTour = new Tour
-                    {
-                        TourName = model.TourName,
-                        Description = model.Description,
-                        Price = model.Price,
-                        Duration = model.Duration,
-                        StartDate = model.StartDate,
-                        EndDate = model.EndDate,
-                        AvailableSeats = model.AvailableSeats,
-                        TourType = model.TourType,
-                        TourStatus = model.TourStatus,
-                        DestinationId = model.DestinationId,
-                        CreatedAt = DateTime.UtcNow
-                    };
+        //[HttpGet]
+        //public IActionResult Create()
+        //{
+        //    return View(new TourViewModel());
+        //}
 
-                    await _unitOfWork.Tours.AddAsync(newTour);
-                    await _unitOfWork.SaveChangesAsync();
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create(TourViewModel model)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            var newTour = new Tour
+        //            {
+        //                TourName = model.TourName,
+        //                Description = model.Description,
+        //                Price = model.Price,
+        //                Duration = model.Duration,
+        //                StartDate = model.StartDate,
+        //                EndDate = model.EndDate,
+        //                AvailableSeats = model.AvailableSeats,
+        //                TourType = model.TourType,
+        //                TourStatus = model.TourStatus,
+        //                DestinationId = model.DestinationId,
+        //                CreatedAt = DateTime.UtcNow
+        //            };
 
-                    TempData["SuccessMessage"] = "Tour created successfully!";
-                    return RedirectToAction("Index");
-                }
+        //            await _unitOfWork.Tours.AddAsync(newTour);
+        //            await _unitOfWork.SaveChangesAsync();
 
-                // Nếu có lỗi validation, load lại danh sách điểm đến
-                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DestinationId.ToString(),
-                        Text = d.Name
-                    }).ToList();
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Error creating tour: " + ex.Message);
-                model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DestinationId.ToString(),
-                        Text = d.Name
-                    }).ToList();
-                return View(model);
-            }
-        }
+        //            TempData["SuccessMessage"] = "Tour created successfully!";
+        //            return RedirectToAction("Index");
+        //        }
 
-        [HttpGet]
-        public async Task<IActionResult> GetTourDetails(int id)
-        {
-            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-            if (tour == null) return NotFound();
+        //        // Nếu có lỗi validation, load lại danh sách điểm đến
+        //        model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+        //            .Select(d => new SelectListItem
+        //            {
+        //                Value = d.DestinationId.ToString(),
+        //                Text = d.Name
+        //            }).ToList();
+        //        return View(model);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ModelState.AddModelError("", "Error creating tour: " + ex.Message);
+        //        model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+        //            .Select(d => new SelectListItem
+        //            {
+        //                Value = d.DestinationId.ToString(),
+        //                Text = d.Name
+        //            }).ToList();
+        //        return View(model);
+        //    }
+        //}
 
-            // Load thông tin liên quan nếu cần
-            tour.Destination = await _unitOfWork.Destinations.GetByIdAsync(tour.DestinationId);
+        //[HttpGet]
+        //public async Task<IActionResult> GetTourDetails(int id)
+        //{
+        //    var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+        //    if (tour == null) return NotFound();
 
-            return PartialView("_TourDetailPartial", tour);
-        }
+        //    // Load thông tin liên quan nếu cần
+        //    tour.Destination = await _unitOfWork.Destinations.GetByIdAsync(tour.DestinationId);
 
-        [HttpGet]
-        public async Task<IActionResult> GetEditTourForm(int id)
-        {
-            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-            if (tour == null) return NotFound();
+        //    return PartialView("_TourDetailPartial", tour);
+        //}
 
-            // Load danh sách điểm đến cho dropdown
-            ViewBag.Destinations = await _unitOfWork.Destinations.GetAllAsync();
+        //[HttpGet]
+        //public async Task<IActionResult> GetEditTourForm(int id)
+        //{
+        //    var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+        //    if (tour == null) return NotFound();
 
-            return PartialView("_EditTourPartial", tour);
-        }
+        //    // Load danh sách điểm đến cho dropdown
+        //    ViewBag.Destinations = await _unitOfWork.Destinations.GetAllAsync();
 
-        [HttpPost]
-        public async Task<IActionResult> EditTour(
-            int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
-            DateTime StartDate, DateTime EndDate,
-            int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
-        {
-            try
-            {
-                var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
-                if (existingTour == null)
-                {
-                    return NotFound();
-                }
+        //    return PartialView("_EditTourPartial", tour);
+        //}
 
-                // Cập nhật thông tin
-                existingTour.TourName = TourName;
-                existingTour.DestinationId = DestinationId;
-                existingTour.Description = Description;
-                existingTour.Price = Price;
-                existingTour.Duration = Duration;
-                existingTour.StartDate = StartDate;
-                existingTour.EndDate = EndDate;
-                existingTour.AvailableSeats = AvailableSeats;
-                existingTour.TourType = TourType;
-                existingTour.TourStatus = TourStatus;
+        //[HttpPost]
+        //public async Task<IActionResult> EditTour(
+        //    int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
+        //    DateTime StartDate, DateTime EndDate,
+        //    int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
+        //{
+        //    try
+        //    {
+        //        var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
+        //        if (existingTour == null)
+        //        {
+        //            return NotFound();
+        //        }
 
-                // Xử lý ảnh
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    // Đảm bảo thư mục uploads tồn tại
-                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-                    if (!Directory.Exists(uploadsDir))
-                    {
-                        Directory.CreateDirectory(uploadsDir);
-                    }
+        //        // Cập nhật thông tin
+        //        existingTour.TourName = TourName;
+        //        existingTour.DestinationId = DestinationId;
+        //        existingTour.Description = Description;
+        //        existingTour.Price = Price;
+        //        existingTour.Duration = Duration;
+        //        existingTour.StartDate = StartDate;
+        //        existingTour.EndDate = EndDate;
+        //        existingTour.AvailableSeats = AvailableSeats;
+        //        existingTour.TourType = TourType;
+        //        existingTour.TourStatus = TourStatus;
 
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
-                    var filePath = Path.Combine(uploadsDir, fileName);
+        //        // Xử lý ảnh
+        //        if (ImageFile != null && ImageFile.Length > 0)
+        //        {
+        //            // Đảm bảo thư mục uploads tồn tại
+        //            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+        //            if (!Directory.Exists(uploadsDir))
+        //            {
+        //                Directory.CreateDirectory(uploadsDir);
+        //            }
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(stream);
-                    }
+        //            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+        //            var filePath = Path.Combine(uploadsDir, fileName);
 
-                    existingTour.ImageUrl = "/uploads/" + fileName;
-                }
+        //            using (var stream = new FileStream(filePath, FileMode.Create))
+        //            {
+        //                await ImageFile.CopyToAsync(stream);
+        //            }
 
-                await _unitOfWork.Tours.UpdateAsync(existingTour);
-                await _unitOfWork.SaveChangesAsync();
+        //            existingTour.ImageUrl = "/uploads/" + fileName;
+        //        }
 
-                return Json(new { redirect = Url.Action("ManageTours") });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Lỗi khi cập nhật tour: " + ex.Message);
-            }
-        }
+        //        await _unitOfWork.Tours.UpdateAsync(existingTour);
+        //        await _unitOfWork.SaveChangesAsync();
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteTour(int id)
-        {
-            try
-            {
-                // Kiểm tra xem tour có tồn tại không
-                var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-                if (tour == null)
-                {
-                    return Json(new { success = false, message = "Tour không tồn tại." });
-                }
+        //        return Json(new { redirect = Url.Action("ManageTours") });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, "Lỗi khi cập nhật tour: " + ex.Message);
+        //    }
+        //}
 
-                // Xóa các booking liên quan (nếu có)
-                var bookings = await _unitOfWork.Bookings.GetAllAsync();
-                var relatedBookings = bookings.Where(b => b.TourId == id).ToList();
-                foreach (var booking in relatedBookings)
-                {
-                    await _unitOfWork.Bookings.DeleteAsync(booking.BookingId);
-                }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> DeleteTour(int id)
+        //{
+        //    try
+        //    {
+        //        // Kiểm tra xem tour có tồn tại không
+        //        var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+        //        if (tour == null)
+        //        {
+        //            return Json(new { success = false, message = "Tour không tồn tại." });
+        //        }
 
-                // Xóa các đánh giá liên quan (nếu có)
-                var reviews = await _unitOfWork.Reviews.GetAllAsync();
-                var relatedReviews = reviews.Where(r => r.TourId == id).ToList();
-                foreach (var review in relatedReviews)
-                {
-                    await _unitOfWork.Reviews.DeleteAsync(review.ReviewId);
-                }
+        //        // Xóa các booking liên quan (nếu có)
+        //        var bookings = await _unitOfWork.Bookings.GetAllAsync();
+        //        var relatedBookings = bookings.Where(b => b.TourId == id).ToList();
+        //        foreach (var booking in relatedBookings)
+        //        {
+        //            await _unitOfWork.Bookings.DeleteAsync(booking.BookingId);
+        //        }
 
-                // Xóa tour
-                await _unitOfWork.Tours.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+        //        // Xóa các đánh giá liên quan (nếu có)
+        //        var reviews = await _unitOfWork.Reviews.GetAllAsync();
+        //        var relatedReviews = reviews.Where(r => r.TourId == id).ToList();
+        //        foreach (var review in relatedReviews)
+        //        {
+        //            await _unitOfWork.Reviews.DeleteAsync(review.ReviewId);
+        //        }
 
-                return Json(new { success = true, message = "Xóa tour thành công!", redirect = Url.Action("ManageTours") });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
-            }
-        }
-//========================== Quản lý Đặt Tour (Booking) ========================================================
+        //        // Xóa tour
+        //        await _unitOfWork.Tours.DeleteAsync(id);
+        //        await _unitOfWork.SaveChangesAsync();
+
+        //        return Json(new { success = true, message = "Xóa tour thành công!", redirect = Url.Action("ManageTours") });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
+        //    }
+        //}
+/*========================== Quản lý Đặt Tour (Booking) ====================================================*/
         public async Task<IActionResult> ManageBookings()
         {
             var bookings = await _unitOfWork.Bookings.GetAllAsync();
             return View(bookings);
         }
 
-//================================ Quản lý Đánh giá (Review) ====================================================
+/*================================ Quản lý Đánh giá (Review) ===============================================*/
         public async Task<IActionResult> ManageReviews()
         {
             var reviews = await _unitOfWork.Reviews.GetAllAsync();
             return View(reviews);
         }
 
-//================================ Quản lý Voucher =============================================================
+/*================================ Quản lý Voucher =========================================================*/
         public async Task<IActionResult> ManageVouchers()
         {
             var vouchers = await _unitOfWork.Vouchers.GetAllAsync();

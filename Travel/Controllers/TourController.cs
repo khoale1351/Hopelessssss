@@ -7,6 +7,7 @@ using Travel.Data;
 using Travel.Models;
 using Travel.Repositories;
 using Travel.ViewModels;
+using System.Text;
 
 public class TourController : Controller
 {
@@ -39,7 +40,6 @@ public class TourController : Controller
         return View(tourViewModels);
     }
 
-
     [Authorize(Roles = "Admin,Manager")]
     [HttpGet]
     public IActionResult Create()
@@ -69,7 +69,6 @@ public class TourController : Controller
         return View(tours);
     }
 
-
     [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
@@ -84,7 +83,6 @@ public class TourController : Controller
 
         return View(tour);
     }
-
 
     // POST: Tour/Create
     [HttpPost]
@@ -244,4 +242,52 @@ public class TourController : Controller
     //    TempData["Message"] = "Hình ảnh đã được tải lên thành công!";
     //    return RedirectToAction("Details", new { id = tourId });
     //}
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult SearchTours(string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+        {
+            return Json(new List<object>());
+        }
+
+        var keywordLower = keyword.ToLower();
+        var tours = _context.Tours
+            .Where(t => EF.Functions.Like(t.TourName.ToLower(), $"%{keywordLower}%"))
+            .Select(t => new { t.TourId, t.TourName })
+            .Take(5)
+            .ToList();
+
+        // Thêm logging để kiểm tra
+        Console.WriteLine($"Keyword: {keywordLower}");
+        Console.WriteLine($"Found {tours.Count} tours:");
+        foreach (var tour in tours)
+        {
+            Console.WriteLine($"Tour: {tour.TourName}");
+        }
+
+        return Json(tours);
+    }
+
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult FindTour(string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+        {
+            return RedirectToAction("Index");
+        }
+
+        var keywordLower = keyword.ToLower();
+        var tour = _context.Tours
+            .FirstOrDefault(t => t.TourName.ToLower() == keywordLower);
+
+        if (tour == null)
+        {
+            TempData["Error"] = "Tour not found.";
+            return RedirectToAction("Index");
+        }
+
+        return RedirectToAction("Details", new { id = tour.TourId });
+    }
 }

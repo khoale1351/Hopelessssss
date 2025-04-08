@@ -39,7 +39,7 @@
 
         <div class="mb-3">
             <label asp-for="TotalPrice" class="form-label">Tổng giá</label>
-            <input type="text" asp-for="TotalPrice" class="form-control" readonly />
+            <input type="number" asp-for="TotalPrice" class="form-control" step="0.01" readonly />
             <span asp-validation-for="TotalPrice" class="text-danger"></span>
         </div>
 
@@ -89,4 +89,12 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            var totalPriceInput = document.querySelector('input[name="TotalPrice"]');
+            if (totalPriceInput) {
+                totalPriceInput.value = totalPriceInput.value.replace(',', '.');
+            }
+        });
+    </script>
 }

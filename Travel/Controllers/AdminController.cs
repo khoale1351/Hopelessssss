@@ -24,6 +24,9 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using DocumentFormat.OpenXml.InkML;
 using Travel.Repositories.IMAGESERVICE;
 using Travel.Data;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Fluent;
 
 namespace Travel.Controllers
 {
@@ -203,7 +206,7 @@ namespace Travel.Controllers
                     model.AvatarFile,
                     "images/avatars",
                     filePrefix: "user",
-                    targetSize: new Size(200, 200) // Kích thước cần resize cho avatar
+                    targetSize: new SixLabors.ImageSharp.Size(200, 200) // Kích thước cần resize cho avatar
                 );
 
                 if (!avatarResult.IsSuccess)
@@ -386,7 +389,7 @@ namespace Travel.Controllers
                     "images/avatars",
                     filePrefix: "user",
                     oldFilePath: oldAvatarPath,
-                    targetSize: new Size(200, 200)
+                    targetSize: new SixLabors.ImageSharp.Size(200, 200)
                 );
                 if (!avatarResult.IsSuccess)
                 {
@@ -562,50 +565,91 @@ namespace Travel.Controllers
             {
                 container.Page(page =>
                 {
-                    page.Margin(20);
-                    page.Header().Text($"Chi tiết người dùng: {user.FullName ?? "N/A"}")
-                        .FontSize(20)
-                        .Bold()
-                        .AlignCenter();
+                    page.Margin(30);
+                    page.Size(PageSizes.A4);
 
                     page.Content().Column(col =>
                     {
-                        if (!string.IsNullOrEmpty(user.AvatarPath))
+                        // Hàng đầu: avatar + tiêu đề
+                        col.Item().Row(row =>
                         {
-                            try
+                            // Avatar bên trái
+                            row.RelativeItem(1).Column(avatarCol =>
                             {
-                                byte[] imageBytes = System.IO.File.ReadAllBytes(Path.Combine("wwwroot", user.AvatarPath));
-
-                                col.Item().PaddingBottom(10).AlignCenter().Element(container =>
+                                if (!string.IsNullOrEmpty(user.AvatarPath))
                                 {
-                                    container
-                                        .Height(150)
-                                        .Width(150)
-                                        .Image(imageBytes)
-                                        .FitArea(); // Fix lỗi layout
-                                });
-                            }
-                            catch
+                                    try
+                                    {
+                                        byte[] imageBytes = System.IO.File.ReadAllBytes(Path.Combine("wwwroot", user.AvatarPath));
+                                        avatarCol.Item().Element(e =>
+                                        {
+                                            var container = e.Height(100).Width(100);
+                                            var image = container.Image(imageBytes);
+                                            image.FitArea();
+                                        });
+                                    }
+                                    catch
+                                    {
+                                        avatarCol.Item().Text("Ảnh đại diện").Italic();
+                                    }
+                                }
+                                else
+                                {
+                                    avatarCol.Item().Text("Ảnh đại diện").Italic();
+                                }
+                            });
+
+                            // Nhãn tiêu đề bên phải
+                            row.RelativeItem(3).AlignMiddle().Column(col =>
                             {
-                                col.Item().Text("Ảnh đại diện: N/A").Italic();
-                            }
-                        }
-                        else
+                                col.Item().Text("THÔNG TIN NGƯỜI DÙNG")
+                                    .FontSize(24).Bold().FontColor(Colors.Blue.Medium);
+                            });
+                        });
+
+                        // Khoảng cách
+                        col.Item().PaddingVertical(20);
+
+                        // Thông tin chi tiết
+                        col.Item().Table(table =>
                         {
-                            col.Item().Text("Ảnh đại diện: N/A").Italic();
-                        }
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(120);
+                                columns.RelativeColumn();
+                            });
 
+                            void AddRow(string label, string value)
+                            {
+                                table.Cell().Element(CellStyle).Text(label).SemiBold().FontSize(12);
+                                table.Cell().Element(CellStyle).Text(value).FontSize(12);
+                            }
 
+                            IContainer CellStyle(IContainer container) =>
+                                container.PaddingVertical(4).PaddingHorizontal(5);
 
-                        col.Item().Text($"Họ và tên: {user.FullName ?? "N/A"}");
-                        col.Item().Text($"Email: {user.Email ?? "N/A"}");
-                        col.Item().Text($"Số điện thoại: {user.PhoneNumber ?? "N/A"}");
-                        col.Item().Text($"Ngày sinh: {user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A"}");
-                        col.Item().Text($"Địa chỉ: {user.Address ?? "N/A"}");
-                        col.Item().Text($"Loại thành viên: {user.MembershipType ?? "N/A"}");
-                        col.Item().Text($"Trạng thái: {(user.IsActive ? "Hoạt động" : "Đã khóa")}");
-                        col.Item().Text($"Ngày tạo: {user.CreatedAt.ToString("dd/MM/yyyy")}");
-                        col.Item().Text($"Vai trò: {(roles.Count > 0 ? string.Join(", ", roles) : "N/A")}");
+                            AddRow("Họ và tên:", user.FullName ?? "N/A");
+                            AddRow("Email:", user.Email ?? "N/A");
+                            AddRow("Số điện thoại:", user.PhoneNumber ?? "N/A");
+                            AddRow("Ngày sinh:", user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A");
+                            AddRow("Địa chỉ:", user.Address ?? "N/A");
+                            AddRow("Loại thành viên:", user.MembershipType ?? "N/A");
+                            AddRow("Trạng thái:", user.IsActive ? "Hoạt động" : "Đã khóa");
+                            AddRow("Ngày tạo:", user.CreatedAt.ToString("dd/MM/yyyy"));
+                            AddRow("Vai trò:", roles.Any() ? string.Join(", ", roles) : "N/A");
+                        });
+
+                        // Kẻ ngang
+                        col.Item().PaddingTop(20).LineHorizontal(1).LineColor(Colors.Grey.Medium);
+                    });
+
+                    // Footer
+                    page.Footer().AlignCenter().Text(txt =>
+                    {
+                        txt.Span("Trang ").FontSize(10);
+                        txt.CurrentPageNumber();
+                        txt.Span(" | Ngày in: ").FontSize(10);
+                        txt.Span(DateTime.Now.ToString("dd/MM/yyyy")).FontSize(10);
                     });
                 });
             });
@@ -624,34 +668,99 @@ namespace Travel.Controllers
             {
                 container.Page(page =>
                 {
-                    page.Margin(20);
-                    page.Header().Text("Danh sách người dùng").FontSize(20).Bold().AlignCenter();
+                    page.Margin(30);
+                    page.Size(PageSizes.A4);
 
-                    page.Content().Table(table =>
+                    // Tiêu đề
+                    page.Header().Element(header =>
+                        header
+                            .PaddingBottom(15)
+                            .AlignCenter()
+                            .Text("DANH SÁCH NGƯỜI DÙNG")
+                                .FontSize(24)
+                                .Bold()
+                                .FontColor(Colors.Blue.Darken2)
+                    );
+
+                    // Bảng dữ liệu
+                    page.Content().Element(content =>
                     {
-                        table.ColumnsDefinition(columns =>
+                        content.Table(table =>
                         {
-                            columns.RelativeColumn(); // FullName
-                            columns.RelativeColumn(); // Email
-                            columns.RelativeColumn(); // Phone
-                            columns.ConstantColumn(100); // Trạng thái
-                        });
+                            // Cấu trúc cột
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3); // Họ và tên
+                                columns.RelativeColumn(4); // Email
+                                columns.RelativeColumn(3); // SĐT
+                                columns.RelativeColumn(3); // Ngày sinh
+                                columns.RelativeColumn(4); // Địa chỉ
+                                columns.RelativeColumn(2); // Trạng thái
+                            });
 
-                        table.Header(header =>
-                        {
-                            header.Cell().Text("Họ và tên").Bold();
-                            header.Cell().Text("Email").Bold();
-                            header.Cell().Text("Số điện thoại").Bold();
-                            header.Cell().Text("Trạng thái").Bold();
-                        });
+                            // Header
+                            table.Header(header =>
+                            {
+                                void HeaderCell(string text) =>
+                                    header.Cell().Element(cell =>
+                                        cell
+                                            .Background(Colors.Blue.Darken2)
+                                            .Border(1)
+                                            .BorderColor(Colors.Blue.Medium)
+                                            .Padding(6)
+                                            .AlignCenter()
+                                            .AlignMiddle()
+                                            .Text(text)
+                                                .FontColor(Colors.White)
+                                                .FontSize(12)
+                                                .Bold()
+                                    );
 
-                        foreach (var user in users)
-                        {
-                            table.Cell().Text(user.FullName ?? "N/A");
-                            table.Cell().Text(user.Email ?? "N/A");
-                            table.Cell().Text(user.PhoneNumber ?? "N/A");
-                            table.Cell().Text(user.IsActive ? "Hoạt động" : "Đã khóa");
-                        }
+                                HeaderCell("Họ và tên");
+                                HeaderCell("Email");
+                                HeaderCell("Số điện thoại");
+                                HeaderCell("Ngày sinh");
+                                HeaderCell("Địa chỉ");
+                                HeaderCell("Trạng thái");
+                            });
+
+                            // Dòng dữ liệu
+                            int index = 0;
+                            foreach (var user in users)
+                            {
+                                var background = index % 2 == 0 ? Colors.Grey.Lighten5 : Colors.White;
+                                index++;
+
+                                void DataCell(string text) =>
+                                    table.Cell().Element(cell =>
+                                        cell
+                                            .Background(background)
+                                            .Border(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignLeft()
+                                            .AlignMiddle()
+                                            .Text(text ?? "N/A")
+                                                .FontSize(11)
+                                    );
+
+                                DataCell(user.FullName);
+                                DataCell(user.Email);
+                                DataCell(user.PhoneNumber);
+                                DataCell(user.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A");
+                                DataCell(user.Address ?? "N/A");
+                                DataCell(user.IsActive ? "Hoạt động" : "Đã khóa");
+                            }
+                        });
+                    });
+
+                    // Footer
+                    page.Footer().AlignCenter().Text(txt =>
+                    {
+                        txt.Span("Trang ").FontSize(10);
+                        txt.CurrentPageNumber();
+                        txt.Span(" | Ngày in: ").FontSize(10);
+                        txt.Span(DateTime.Now.ToString("dd/MM/yyyy")).FontSize(10);
                     });
                 });
             });
@@ -661,6 +770,8 @@ namespace Travel.Controllers
             stream.Position = 0;
             return File(stream.ToArray(), "application/pdf", "Users_List.pdf");
         }
+
+
 
         public async Task<IActionResult> ExportUsersToExcel()
         {
@@ -967,61 +1078,142 @@ namespace Travel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateVoucher([Bind("VoucherId,Code,Description,DiscountAmount,DiscountPercentage,MinimumBookingValue,MaxDiscountAmount,ExpiryDate,UsageLimit,UsageCount,IsActive")] Voucher voucher)
+        public async Task<IActionResult> CreateVoucher(VoucherViewModel model)
         {
-            if (voucher.ExpiryDate < DateTime.Today)
+            if (string.IsNullOrWhiteSpace(model.Code))
+            {
+                ModelState.AddModelError("Code", "Mã voucher không được để trống hoặc chỉ chứa khoảng trắng.");
+            }
+            else
+            {
+                var existingCode = _context.Vouchers
+                    .Any(v => v.Code.ToLower() == model.Code.Trim().ToLower());
+
+                if (existingCode)
+                {
+                    ModelState.AddModelError("Code", "Mã voucher này đã tồn tại.");
+                }
+            }
+
+            if (!model.ExpiryDate.HasValue || model.ExpiryDate == default)
+            {
+                ModelState.AddModelError("ExpiryDate", "Ngày hết hạn không được để trống.");
+            }
+            else if (model.ExpiryDate < DateTime.Today)
             {
                 ModelState.AddModelError("ExpiryDate", "Ngày hết hạn không được nhỏ hơn ngày hiện tại.");
             }
 
+            if (model.DiscountAmount.HasValue && model.DiscountPercentage.HasValue)
+            {
+                ModelState.AddModelError("", "Chỉ được chọn một trong hai: số tiền hoặc phần trăm giảm giá.");
+            }
+
+            if (!model.DiscountAmount.HasValue && !model.DiscountPercentage.HasValue)
+            {
+                ModelState.AddModelError("", "Phải nhập số tiền hoặc phần trăm giảm giá.");
+            }
+
             if (ModelState.IsValid)
             {
+                var voucher = new Voucher
+                {
+                    Code = model.Code,
+                    Description = model.Description,
+                    DiscountAmount = model.DiscountAmount ?? 0,
+                    DiscountPercentage = model.DiscountPercentage,
+                    MinimumBookingValue = model.MinimumBookingValue,
+                    MaxDiscountAmount = model.MaxDiscountAmount,
+                    ExpiryDate = model.ExpiryDate.Value,
+                    UsageLimit = model.UsageLimit,
+                    UsageCount = model.UsageCount,
+                    IsActive = model.IsActive
+                };
+
                 await _unitOfWork.Vouchers.AddAsync(voucher);
                 await _unitOfWork.SaveChangesAsync();
                 return RedirectToAction(nameof(ManageVouchers));
             }
 
-            return View(voucher);
+            return View(model);
         }
 
         public async Task<IActionResult> EditVoucher(int id)
         {
             var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
-            if (voucher == null)
+            if (voucher == null) return NotFound();
+
+            var model = new VoucherViewModel
             {
-                return NotFound();
-            }
-            return View(voucher);
+                Code = voucher.Code,
+                Description = voucher.Description,
+                DiscountAmount = voucher.DiscountAmount > 0 ? voucher.DiscountAmount : null,
+                DiscountPercentage = voucher.DiscountPercentage,
+                MinimumBookingValue = voucher.MinimumBookingValue,
+                MaxDiscountAmount = voucher.MaxDiscountAmount,
+                ExpiryDate = voucher.ExpiryDate,
+                UsageLimit = voucher.UsageLimit,
+                UsageCount = voucher.UsageCount,
+                IsActive = voucher.IsActive
+            };
+
+            ViewBag.VoucherId = voucher.VoucherId;
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditVoucher(int id, [Bind("VoucherId,Code,Description,DiscountAmount,DiscountPercentage,MinimumBookingValue,MaxDiscountAmount,ExpiryDate,UsageLimit,UsageCount,IsActive")] Voucher voucher)
+        public async Task<IActionResult> EditVoucher(int id, VoucherViewModel model)
         {
-            if (id != voucher.VoucherId)
+            // Kiểm tra trùng mã voucher (ngoại trừ voucher hiện tại)
+            var codeExists = _context.Vouchers
+                .Any(v => v.Code.ToLower() == model.Code.Trim().ToLower() && v.VoucherId != id);
+
+            if (codeExists)
             {
-                return NotFound();
+                ModelState.AddModelError("Code", "Mã voucher này đã tồn tại.");
+            }
+
+            // Kiểm tra chọn đồng thời cả số tiền và phần trăm giảm
+            if (model.DiscountAmount.HasValue && model.DiscountPercentage.HasValue)
+            {
+                ModelState.AddModelError("", "Chỉ được chọn một trong hai: số tiền hoặc phần trăm giảm giá.");
+            }
+
+            // Kiểm tra không chọn cả hai
+            if (!model.DiscountAmount.HasValue && !model.DiscountPercentage.HasValue)
+            {
+                ModelState.AddModelError("DiscountAmount", "Bạn phải nhập số tiền hoặc phần trăm giảm giá.");
+                ModelState.AddModelError("DiscountPercentage", "Bạn phải nhập số tiền hoặc phần trăm giảm giá.");
             }
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    await _unitOfWork.Vouchers.UpdateAsync(voucher);
-                    await _unitOfWork.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (await _unitOfWork.Vouchers.GetByIdAsync(id) == null)
-                    {
-                        return NotFound();
-                    }
-                    throw;
-                }
+                var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+                if (voucher == null) return NotFound();
+
+                voucher.Code = model.Code.Trim();
+                voucher.Description = model.Description;
+                voucher.DiscountAmount = model.DiscountAmount ?? 0;
+                voucher.DiscountPercentage = model.DiscountPercentage;
+                voucher.MinimumBookingValue = model.MinimumBookingValue;
+                voucher.MaxDiscountAmount = model.MaxDiscountAmount;
+                voucher.ExpiryDate = model.ExpiryDate.Value;
+                voucher.UsageLimit = model.UsageLimit;
+                voucher.UsageCount = model.UsageCount;
+                voucher.IsActive = model.IsActive;
+
+                await _unitOfWork.Vouchers.UpdateAsync(voucher);
+                await _unitOfWork.SaveChangesAsync();
+
                 return RedirectToAction(nameof(ManageVouchers));
             }
-            return View(voucher);
+
+            ViewBag.VoucherId = id;
+            return View(model);
         }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -286,36 +286,63 @@ namespace Travel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("BookingId,UserId,TourId,NumberOfAdults,NumberOfChildren,TotalPrice,BookingDate,Status,PaymentStatus,VoucherID,StartDate,DiscountAmountApplied,DiscountPercentageApplied")] Booking booking, string searchQuery, string statusFilter)
+        public async Task<IActionResult> Edit(int id, [Bind("BookingId,UserId,TourId,NumberOfAdults,NumberOfChildren,BookingDate,Status,PaymentStatus,VoucherID,StartDate,DiscountAmountApplied,DiscountPercentageApplied")] Booking booking, string searchQuery, string statusFilter)
         {
             if (id != booking.BookingId)
             {
                 return NotFound();
             }
 
-            // Kiểm tra tính hợp lệ của model
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    // Cập nhật booking trong database
-                    _context.Update(booking);
-                    await _context.SaveChangesAsync();
+                // Lấy thông tin booking hiện tại từ cơ sở dữ liệu
+                var existingBooking = await _context.Bookings
+                    .Include(b => b.Tour)
+                    .FirstOrDefaultAsync(b => b.BookingId == id);
 
-                    // Sau khi lưu thành công, chuyển hướng về ManageBookings
-                    return RedirectToAction("ManageBookings", "Admin", new { searchQuery = searchQuery, statusFilter = statusFilter });
-                }
-                catch (DbUpdateConcurrencyException)
+                if (existingBooking == null)
                 {
-                    if (!BookingExists(booking.BookingId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
+
+                // Cập nhật các trường có thể chỉnh sửa
+                existingBooking.Status = booking.Status;
+                existingBooking.PaymentStatus = booking.PaymentStatus;
+                existingBooking.StartDate = booking.StartDate;
+                existingBooking.DiscountAmountApplied = booking.DiscountAmountApplied;
+                existingBooking.DiscountPercentageApplied = booking.DiscountPercentageApplied;
+
+                // Tính toán lại TotalPrice
+                if (existingBooking.Tour != null)
+                {
+                    decimal basePrice = existingBooking.Tour.Price * (existingBooking.NumberOfAdults + existingBooking.NumberOfChildren);
+                    decimal discountAmount = booking.DiscountAmountApplied ?? 0;
+                    decimal discountPercentage = booking.DiscountPercentageApplied ?? 0;
+                    decimal discountFromPercentage = basePrice * (discountPercentage / 100);
+                    existingBooking.TotalPrice = basePrice - discountAmount - discountFromPercentage;
+                }
+
+                // Cập nhật booking trong database
+                _context.Update(existingBooking);
+                await _context.SaveChangesAsync();
+
+                // Sau khi lưu thành công, chuyển hướng về ManageBookings
+                return RedirectToAction("ManageBookings", "Admin", new { searchQuery = searchQuery, statusFilter = statusFilter });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookingExists(booking.BookingId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Lỗi khi lưu thay đổi: {ex.Message}");
             }
 
             // Nếu model không hợp lệ, truyền lại ViewBag và quay lại trang Edit

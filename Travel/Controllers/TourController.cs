@@ -158,18 +158,44 @@ public class TourController : Controller
     [HttpPost]
     public async Task<IActionResult> EditTour(
         int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
-        DateTime StartDate, DateTime EndDate,
-        int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
+        DateTime StartDate, DateTime EndDate, int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
     {
         try
         {
+            // Log để kiểm tra giá trị nhận được
+            Console.WriteLine($"TourId: {TourId}, StartDate: {StartDate}, EndDate: {EndDate}, Duration: {Duration}");
+
+            // Kiểm tra ràng buộc
+            if (StartDate >= EndDate)
+            {
+                return Json(new { success = false, message = "Ngày về phải sau ngày đi." });
+            }
+
+            var dayDiff = (EndDate - StartDate).Days + 1;
+            Console.WriteLine($"Calculated dayDiff: {dayDiff}");
+
+            if (dayDiff > 30)
+            {
+                return Json(new { success = false, message = "Tour không được vượt quá 30 ngày." });
+            }
+            if (dayDiff != Duration)
+            {
+                return Json(new { success = false, message = $"Thời gian tour không khớp với ngày đi và ngày về. Dự kiến: {dayDiff}, Nhận được: {Duration}" });
+            }
+            if (AvailableSeats < 0)
+            {
+                return Json(new { success = false, message = "Số chỗ không được nhỏ hơn 0." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
             var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
             if (existingTour == null)
             {
                 return NotFound();
             }
 
-            // Cập nhật thông tin tour
+            // Cập nhật thông tin
             existingTour.TourName = TourName;
             existingTour.DestinationId = DestinationId;
             existingTour.Description = Description;
@@ -181,13 +207,15 @@ public class TourController : Controller
             existingTour.TourType = TourType;
             existingTour.TourStatus = TourStatus;
 
-            // Xử lý hình ảnh (nếu có)
+            // Xử lý hình ảnh
             if (ImageFile != null && ImageFile.Length > 0)
             {
-                var tourId = existingTour.TourId;
+                var uniqueFileName = $"tour-{TourId}-{Guid.NewGuid().ToString()[..8]}";
+                if (ImageFile.Length > 5 * 1024 * 1024) // 5MB
+                {
+                    return StatusCode(400, "Kích thước ảnh không được vượt quá 5MB");
+                }
 
-                var uniqueFileName = $"tour-{tourId}";
-                // Gọi ImageService để lưu ảnh
                 var result = await _imageService.SaveImageAsync(
                     ImageFile,
                     "images/tours",
@@ -196,28 +224,31 @@ public class TourController : Controller
                     targetSize: new Size(800, 600)
                 );
 
-                if (result.IsSuccess)
+                if (!result.IsSuccess)
                 {
-                    existingTour.ImageUrl = result.FilePath;
+                    return StatusCode(500, result.ErrorMessage);
                 }
-                else
-                {
-                    ModelState.AddModelError("", result.ErrorMessage);
-                    return View();
-                }
+
+                existingTour.ImageUrl = result.FilePath;
             }
 
-            // Cập nhật dữ liệu tour
             await _unitOfWork.Tours.UpdateAsync(existingTour);
             await _unitOfWork.SaveChangesAsync();
+            await transaction.CommitAsync();
 
-            return Json(new { redirect = Url.Action("ManageTours", "Admin") });
+            return Json(new
+            {
+                success = true,
+                message = "Cập nhật tour thành công!",
+                redirect = Url.Action("ManageTours", "Admin")
+            });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, "Lỗi khi cập nhật tour: " + ex.Message);
+            return StatusCode(500, $"Lỗi không xác định: {ex.Message}");
         }
     }
+
 
     [HttpPost]
     [ValidateAntiForgeryToken]

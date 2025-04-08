@@ -26,6 +26,11 @@ namespace Travel.Data
         public virtual DbSet<TransactionHistory> TransactionHistories { get; set; }
         public virtual DbSet<UserLog> UserLogs { get; set; }
         public virtual DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<ForumPost> ForumPosts { get; set; }
+        public DbSet<ForumComment> ForumComments { get; set; }
+        public DbSet<ForumCategory> ForumCategories { get; set; }
+        public DbSet<ForumPostCategory> ForumPostCategories { get; set; }
+        public DbSet<ForumPostLike> ForumPostLikes { get; set; }
 
         // Loại bỏ DbSet<User> vì bây giờ dùng ApplicationUser
 
@@ -322,6 +327,68 @@ namespace Travel.Data
                     .HasDefaultValue(0m)
                     .HasColumnType("decimal(18, 2)");
                 entity.Property(e => e.UsageCount).HasDefaultValue(0);
+            });
+
+            // Configure Forum relationships
+            modelBuilder.Entity<ForumComment>(entity =>
+            {
+                entity.HasOne(c => c.Post)
+                    .WithMany(p => p.Comments)
+                    .HasForeignKey(c => c.PostId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(c => c.ParentComment)
+                    .WithMany(p => p.Replies)
+                    .HasForeignKey(c => c.ParentCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(c => c.User)
+                    .WithMany()
+                    .HasForeignKey(c => c.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<ForumPost>(entity =>
+            {
+                entity.HasOne(p => p.User)
+                    .WithMany()
+                    .HasForeignKey(p => p.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<ForumCategory>(entity =>
+            {
+                // Không cần định nghĩa lại mối quan hệ nhiều-nhiều ở đây
+            });
+
+            modelBuilder.Entity<ForumPostCategory>(entity =>
+            {
+                entity.HasKey(pc => new { pc.PostId, pc.CategoryId });
+
+                entity.HasOne(pc => pc.Post)
+                    .WithMany(p => p.Categories)
+                    .HasForeignKey(pc => pc.PostId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(pc => pc.Category)
+                    .WithMany(c => c.Posts)
+                    .HasForeignKey(pc => pc.CategoryId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<ForumPostLike>(entity =>
+            {
+                entity.HasOne(l => l.Post)
+                    .WithMany(p => p.Likes)
+                    .HasForeignKey(l => l.PostId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(l => l.User)
+                    .WithMany()
+                    .HasForeignKey(l => l.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(l => new { l.UserId, l.PostId }).IsUnique();
             });
 
             OnModelCreatingPartial(modelBuilder);

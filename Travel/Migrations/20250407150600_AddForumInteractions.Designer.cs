@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Travel.Data;
 
@@ -11,9 +12,11 @@ using Travel.Data;
 namespace Travel.Migrations
 {
     [DbContext(typeof(TourismDbContext))]
-    partial class TourismDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250407150600_AddForumInteractions")]
+    partial class AddForumInteractions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -610,17 +613,23 @@ namespace Travel.Migrations
 
             modelBuilder.Entity("Travel.Models.ForumPostCategory", b =>
                 {
-                    b.Property<int>("PostId")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int")
-                        .HasColumnOrder(1);
+                        .HasColumnType("int");
 
-                    b.HasKey("PostId", "CategoryId");
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("PostId");
 
                     b.ToTable("ForumPostCategories");
                 });
@@ -1187,13 +1196,13 @@ namespace Travel.Migrations
             modelBuilder.Entity("Travel.Models.ForumPostCategory", b =>
                 {
                     b.HasOne("Travel.Models.ForumCategory", "Category")
-                        .WithMany("Posts")
+                        .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Travel.Models.ForumPost", "Post")
-                        .WithMany("Categories")
+                        .WithMany()
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -1360,11 +1369,6 @@ namespace Travel.Migrations
                     b.Navigation("Tours");
                 });
 
-            modelBuilder.Entity("Travel.Models.ForumCategory", b =>
-                {
-                    b.Navigation("Posts");
-                });
-
             modelBuilder.Entity("Travel.Models.ForumComment", b =>
                 {
                     b.Navigation("Replies");
@@ -1372,8 +1376,6 @@ namespace Travel.Migrations
 
             modelBuilder.Entity("Travel.Models.ForumPost", b =>
                 {
-                    b.Navigation("Categories");
-
                     b.Navigation("Comments");
 
                     b.Navigation("Likes");

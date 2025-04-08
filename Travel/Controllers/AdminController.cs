@@ -23,6 +23,7 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using DocumentFormat.OpenXml.InkML;
 using Travel.Repositories.IMAGESERVICE;
+using Travel.Data;
 
 namespace Travel.Controllers
 {
@@ -34,14 +35,16 @@ namespace Travel.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMemoryCache _cache;
         private readonly IImageService _imageService;
+        private readonly TourismDbContext _context;
 
-        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache, IImageService imageService)
+        public AdminController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMemoryCache cache, IImageService imageService, TourismDbContext context)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _roleManager = roleManager;
             _cache = cache;
             _imageService = imageService;
+            _context = context;
         }
 
 //================================ Trang Tổng quan Dasboard =====================================================
@@ -998,6 +1001,87 @@ namespace Travel.Controllers
                 await _unitOfWork.SaveChangesAsync();
             }
             return RedirectToAction(nameof(ManageVouchers));
+        }
+
+        public async Task<IActionResult> ManageForumCategories()
+        {
+            var categories = await _context.ForumCategories.ToListAsync();
+            return View(categories);
+        }
+
+        [HttpGet]
+        public IActionResult CreateForumCategory()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateForumCategory(ForumCategory category)
+        {
+            if (ModelState.IsValid)
+            {
+                await _context.ForumCategories.AddAsync(category);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(ManageForumCategories));
+            }
+            return View(category);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditForumCategory(int id)
+        {
+            var category = await _context.ForumCategories.FindAsync(id);
+            if (category == null)
+            {
+                return NotFound();
+            }
+            return View(category);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditForumCategory(int id, ForumCategory category)
+        {
+            if (id != category.CategoryId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(category);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(ManageForumCategories));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.ForumCategories.Any(e => e.CategoryId == id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+            return View(category);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteForumCategory(int id)
+        {
+            var category = await _context.ForumCategories.FindAsync(id);
+            if (category != null)
+            {
+                _context.ForumCategories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(ManageForumCategories));
         }
     }
 }

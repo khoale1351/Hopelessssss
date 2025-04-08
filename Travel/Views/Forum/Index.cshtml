@@ -1,30 +1,88 @@
-﻿@model List<Travel.Controllers.ForumController.Post>
-
-@{
-    ViewData["Title"] = "Forum";
+﻿@{
+    ViewData["Title"] = "Diễn đàn";
 }
 
-<h2>Forum</h2>
-<div class="post-form">
-    <a href="/Forum/Create" class="btn-create-post">
-        <i class="fas fa-plus"></i> <!-- Icon dấu cộng -->
-        <span class="tooltip">Create New Post</span> <!-- Chữ hiển thị khi hover -->
-    </a>
-</div>
-
-<div class="posts">
-    @foreach (var post in Model)
-    {
-        <div class="post">
-            <h3>@post.Title</h3>
-            <p>@post.Content</p>
-            <div class="post-actions">
-                <form method="post" action="/Forum/Vote">
-                    <input type="hidden" name="postId" value="@post.Id">
-                    <button type="submit" name="action" value="like">▲ @post.Likes</button>
-                    <button type="submit" name="action" value="dislike">▼ @post.Dislikes</button>
-                </form>
+<div class="container my-5">
+    <div class="row">
+        <!-- Danh mục -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Danh mục</h4>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var category in ViewBag.Categories)
+                    {
+                        <a href="@Url.Action("Category", "Forum", new { id = category.CategoryId })" 
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            @category.Name
+                            <span class="badge bg-primary rounded-pill">@category.PostCount</span>
+                        </a>
+                    }
+                </div>
             </div>
         </div>
-    }
+
+        <!-- Bài viết -->
+        <div class="col-md-8">
+            <!-- Bài viết ghim -->
+            @if (ViewBag.PinnedPosts != null && ViewBag.PinnedPosts.Count > 0)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0">Bài viết ghim</h4>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var post in ViewBag.PinnedPosts)
+                        {
+                            <a href="@Url.Action("Post", "Forum", new { id = post.PostId })" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">📌 @post.Title</h5>
+                                    <small>@post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <p class="mb-1">
+                                    <small>
+                                        Đăng bởi: @post.UserName |
+                                        Lượt xem: @post.ViewCount |
+                                        Bình luận: @post.CommentCount
+                                    </small>
+                                </p>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Bài viết mới -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Bài viết mới</h4>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a href="@Url.Action("Create", "Forum")" class="btn btn-light">Đăng bài</a>
+                    }
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var post in ViewBag.RecentPosts)
+                    {
+                        <a href="@Url.Action("Post", "Forum", new { id = post.PostId })" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@post.Title</h5>
+                                <small>@post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                            <p class="mb-1">
+                                <small>
+                                    Đăng bởi: @post.UserName |
+                                    Lượt xem: @post.ViewCount |
+                                    Bình luận: @post.CommentCount
+                                </small>
+                            </p>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

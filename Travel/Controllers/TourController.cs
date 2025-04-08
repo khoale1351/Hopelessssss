@@ -86,6 +86,26 @@ public class TourController : Controller
         {
             if (ModelState.IsValid)
             {
+                string? imagePath = null;
+                if (model.ImageFile != null)
+                {
+                    var result = await _imageService.SaveImageAsync(
+                        model.ImageFile,
+                        "images/tours",           // thư mục con
+                        "tour",                   // prefix tên file
+                        null,                     // không có ảnh cũ
+                        new Size(800, 600)        // kích thước mong muốn
+                    );
+
+                    if (!result.IsSuccess)
+                    {
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage!);
+                        goto ReturnView;
+                    }
+
+                    imagePath = result.FilePath;
+                }
+
                 var newTour = new Tour
                 {
                     TourName = model.TourName,
@@ -98,7 +118,8 @@ public class TourController : Controller
                     TourType = model.TourType,
                     TourStatus = model.TourStatus,
                     DestinationId = model.DestinationId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    ImageUrl = imagePath  // Gán đường dẫn ảnh nếu có
                 };
 
                 await _unitOfWork.Tours.AddAsync(newTour);
@@ -108,13 +129,14 @@ public class TourController : Controller
                 return RedirectToAction("ManageTours", "Admin");
             }
 
-            // Nếu có lỗi validation, load lại danh sách điểm đến
+        ReturnView:
             model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
                 .Select(d => new SelectListItem
                 {
                     Value = d.DestinationId.ToString(),
                     Text = d.Name
                 }).ToList();
+
             return View(model);
         }
         catch (Exception ex)
@@ -129,6 +151,7 @@ public class TourController : Controller
             return View(model);
         }
     }
+
 
     [HttpGet]
     public async Task<IActionResult> GetTourDetails(int id)

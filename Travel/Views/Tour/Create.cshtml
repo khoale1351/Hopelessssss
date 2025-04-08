@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Create New Tour";
-    Layout = "_LayoutAdmin"; // Assuming you're using the same admin layout
+    Layout = "_LayoutAdmin";
 }
 
 <div class="container-fluid px-4">
@@ -12,7 +12,7 @@
             Tour Information
         </div>
         <div class="card-body">
-            <form asp-action="Create" method="post" class="needs-validation" novalidate>
+            <form asp-action="Create" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
                 <div class="row">
                     <!-- Left Column -->
                     <div class="col-md-6">
@@ -28,15 +28,12 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="DestinationId" class="form-label">Destination</label>
+                            <label class="form-label">Destination</label>
                             <div class="position-relative">
-                                <input type="text" id="destinationSearch" class="form-control"
-                                       placeholder="Type to search destinations..." autocomplete="off" required />
+                                <input type="text" id="destinationSearch" class="form-control" placeholder="Search destinations..." required />
                                 <input type="hidden" asp-for="DestinationId" id="selectedDestinationId" />
                                 <span asp-validation-for="DestinationId" class="text-danger"></span>
-                                <div id="destinationResults" class="dropdown-menu w-100" style="display: none; max-height: 300px; overflow-y: auto;">
-                                    <!-- Results will appear here -->
-                                </div>
+                                <div id="destinationResults" class="list-group mt-1 shadow" style="display:none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                             </div>
                         </div>
                     </div>
@@ -55,7 +52,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Duration" class="form-label">Duration (days)</label>
-                                <input asp-for="Duration" class="form-control" type="number" min="1" required />
+                                <input asp-for="Duration" class="form-control" type="number" readonly />
                                 <span asp-validation-for="Duration" class="text-danger"></span>
                             </div>
                         </div>
@@ -104,8 +101,42 @@
                     </div>
                 </div>
 
+                <!-- Image Upload Section -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="fas fa-image me-1"></i>
+                                Tour Image (Required)
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="mb-3">
+                                            <label asp-for="ImageFile" class="form-label">Upload Image</label>
+                                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" required />
+                                            <div class="form-text">Only JPG, PNG files (Max 5MB)</div>
+                                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex justify-content-center align-items-center h-100">
+                                            <button type="button" class="btn btn-outline-primary" id="previewImageBtn" disabled>
+                                                <i class="fas fa-eye me-1"></i> Preview Image
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3" id="imagePreviewContainer" style="display: none;">
+                                    <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-end mt-4">
-                    <button type="submit" class="btn btn-primary me-2">
+                    <button type="submit" class="btn btn-primary me-2" id="submitBtn">
                         <i class="fas fa-save me-1"></i> Create Tour
                     </button>
                     <a asp-controller="Admin" asp-action="ManageTours" class="btn btn-outline-secondary">
@@ -120,7 +151,7 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Set default dates (giữ nguyên phần này)
+            // Set default dates to current year
             const today = new Date();
             const tomorrow = new Date();
             tomorrow.setDate(today.getDate() + 1);
@@ -135,86 +166,133 @@
             $('#StartDate').val(formatDate(today));
             $('#EndDate').val(formatDate(tomorrow));
 
-            // Improved Destination Search
-            let searchTimeout;
-            const destinationSearch = $('#destinationSearch');
-            const destinationResults = $('#destinationResults');
-            const selectedDestinationId = $('#selectedDestinationId');
-
-            destinationSearch.on('focus', function() {
-                if ($(this).val().trim().length >= 2) {
-                    searchDestinations($(this).val().trim());
-                }
-            });
-
-            destinationSearch.on('input', function() {
-                clearTimeout(searchTimeout);
-                const searchTerm = $(this).val().trim();
-
-                if (searchTerm.length >= 2) {
-                    searchTimeout = setTimeout(() => {
-                        searchDestinations(searchTerm);
-                    }, 300);
+            // Tự động tính Duration khi thay đổi ngày
+            function updateDuration() {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                if (startDate && endDate && startDate < endDate) {
+                    const diff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    $('#Duration').val(diff);
                 } else {
-                    destinationResults.hide();
-                    selectedDestinationId.val('');
+                    $('#Duration').val('');
                 }
-            });
-
-            function searchDestinations(searchTerm) {
-                $.getJSON('/Tour/SearchDestinations', { searchTerm: searchTerm })
-                    .done(function(data) {
-                        destinationResults.empty();
-
-                        if (data && data.length > 0) {
-                            data.forEach(function(destination) {
-                                const displayText = `${destination.name} - ${destination.city}, ${destination.country}`;
-                                destinationResults.append(
-                                    `<a href="#" class="dropdown-item"
-                                       data-id="${destination.destinationId}"
-                                       data-name="${destination.name}">
-                                        <div class="d-flex justify-content-between">
-                                            <span>${destination.name}</span>
-                                            <small class="text-muted">${destination.city}, ${destination.country}</small>
-                                        </div>
-                                    </a>`
-                                );
-                            });
-                            destinationResults.show();
-                        } else {
-                            destinationResults.append(
-                                `<div class="dropdown-item text-muted">No destinations found</div>`
-                            );
-                            destinationResults.show();
-                        }
-                    })
-                    .fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error("Error fetching destinations:", textStatus, errorThrown);
-                        destinationResults.html(
-                            `<div class="dropdown-item text-danger">Error loading destinations</div>`
-                        ).show();
-                    });
             }
 
-            // Handle selection
-            $(document).on('click', '#destinationResults .dropdown-item', function(e) {
+            $('#StartDate, #EndDate').on('change', updateDuration);
+            updateDuration(); // Gọi lần đầu để tính giá trị mặc định
+
+            // Image Preview Functionality
+            $('#ImageFile').change(function() {
+                const file = this.files[0];
+                const preview = $('#imagePreview');
+                const previewContainer = $('#imagePreviewContainer');
+                const previewBtn = $('#previewImageBtn');
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.attr('src', e.target.result);
+                        previewContainer.show();
+                        previewBtn.prop('disabled', false);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.attr('src', '#');
+                    previewContainer.hide();
+                    previewBtn.prop('disabled', true);
+                }
+            });
+
+            $('#previewImageBtn').click(function() {
+                $('#imagePreviewContainer').toggle();
+            });
+
+            // Validate form trước khi submit
+            $('form').submit(function(e) {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (startDate < today) {
+                    e.preventDefault();
+                    alert('Ngày đi phải lớn hơn hoặc bằng ngày hiện tại.');
+                    $('#StartDate').focus();
+                    return false;
+                }
+                if (startDate >= endDate) {
+                    e.preventDefault();
+                    alert('Ngày về phải sau ngày đi.');
+                    $('#EndDate').focus();
+                    return false;
+                }
+                if ((endDate - startDate) / (1000 * 60 * 60 * 24) + 1 > 30) {
+                    e.preventDefault();
+                    alert('Tour không được vượt quá 30 ngày.');
+                    $('#EndDate').focus();
+                    return false;
+                }
+                if (!$('#ImageFile').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng upload ảnh cho tour.');
+                    $('#ImageFile').focus();
+                    return false;
+                }
+                return true;
+            });
+
+            // Destination search with debounce (giữ nguyên)
+            let searchTimeout;
+            $('#destinationSearch').on('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length >= 2) {
+                    searchTimeout = setTimeout(() => {
+                        $.getJSON('/Tour/SearchDestinations', { searchTerm: searchTerm })
+                            .done(function(data) {
+                                const resultsContainer = $('#destinationResults');
+                                resultsContainer.empty();
+                                if (data && data.length > 0) {
+                                    data.forEach(function(destination) {
+                                        const displayText = `${destination.name} - ${destination.city}, ${destination.country}`;
+                                        resultsContainer.append(
+                                            `<a href="#" class="list-group-item list-group-item-action"
+                                               data-id="${destination.destinationId}"
+                                               data-name="${displayText}">
+                                                ${displayText}
+                                            </a>`
+                                        );
+                                    });
+                                    resultsContainer.show();
+                                } else {
+                                    resultsContainer.hide();
+                                }
+                            })
+                            .fail(function(jqXHR, textStatus, errorThrown) {
+                                console.error("Error fetching destinations:", textStatus, errorThrown);
+                            });
+                    }, 300);
+                } else {
+                    $('#destinationResults').hide();
+                }
+            });
+
+            $(document).on('click', '#destinationResults .list-group-item', function(e) {
                 e.preventDefault();
                 const destinationId = $(this).data('id');
                 const destinationName = $(this).data('name');
-
-                destinationSearch.val(destinationName);
-                selectedDestinationId.val(destinationId);
-                destinationResults.hide();
+                $('#destinationSearch').val(destinationName);
+                $('#selectedDestinationId').val(destinationId);
+                $('#destinationResults').hide();
             });
 
-            // Hide dropdown when clicking outside
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('#destinationSearch, #destinationResults').length) {
-                    destinationResults.hide();
+                    $('#destinationResults').hide();
                 }
             });
 
-            // Form validation (giữ nguyên)
+            // Form validation
             (function() {
                 'use strict';
                 const forms = document.querySelectorAll('.needs-validation');

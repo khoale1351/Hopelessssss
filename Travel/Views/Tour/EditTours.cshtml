@@ -18,19 +18,20 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <form asp-action="Edit" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
                 <input type="hidden" asp-for="TourId" />
 
                 <div class="row">
+                    <!-- Left Column -->
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="TourName" class="form-label"></label>
+                            <label asp-for="TourName" class="form-label">Tên Tour</label>
                             <input asp-for="TourName" class="form-control" required />
                             <span asp-validation-for="TourName" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="DestinationId" class="form-label"></label>
+                            <label asp-for="DestinationId" class="form-label">Điểm đến</label>
                             <select asp-for="DestinationId" asp-items="ViewBag.DestinationOptions" class="form-control" required>
                                 <option value="">Chọn điểm đến...</option>
                             </select>
@@ -38,46 +39,51 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Description" class="form-label"></label>
+                            <label asp-for="Description" class="form-label">Mô tả</label>
                             <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
                     </div>
 
+                    <!-- Right Column -->
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="Price" class="form-label"></label>
-                            <input asp-for="Price" class="form-control" required />
+                            <label asp-for="Price" class="form-label">Giá (VNĐ)</label>
+                            <div class="input-group">
+                                <input asp-for="Price" class="form-control" type="number" step="1000" min="0" required />
+                                <span class="input-group-text">₫</span>
+                            </div>
                             <span asp-validation-for="Price" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Duration" class="form-label"></label>
-                            <input asp-for="Duration" class="form-control" id="Duration" required />
+                            <label asp-for="Duration" class="form-label">Thời gian (ngày)</label>
+                            <input asp-for="Duration" class="form-control" type="number" readonly />
                             <span asp-validation-for="Duration" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="AvailableSeats" class="form-label"></label>
-                            <input asp-for="AvailableSeats" class="form-control" required />
-                            <span asp-validation-for="AvailableSeats" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="StartDate" class="form-label"></label>
-                            <input asp-for="StartDate" type="date" class="form-control" id="StartDate" required />
+                            <label asp-for="StartDate" class="form-label">Ngày đi</label>
+                            <input asp-for="StartDate" type="date" class="form-control" required />
                             <span asp-validation-for="StartDate" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="EndDate" class="form-label"></label>
-                            <input asp-for="EndDate" type="date" class="form-control" id="EndDate" required />
+                            <label asp-for="EndDate" class="form-label">Ngày về</label>
+                            <input asp-for="EndDate" type="date" class="form-control" required />
                             <span asp-validation-for="EndDate" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="TourType" class="form-label"></label>
-                            <select asp-for="TourType" class="form-control">
+                            <label asp-for="AvailableSeats" class="form-label">Số chỗ</label>
+                            <input asp-for="AvailableSeats" class="form-control" type="number" min="0" required />
+                            <span asp-validation-for="AvailableSeats" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TourType" class="form-label">Loại Tour</label>
+                            <select asp-for="TourType" class="form-control" required>
+                                <option value="">-- Chọn loại --</option>
                                 <option value="Private">Tour riêng</option>
                                 <option value="Group">Tour nhóm</option>
                             </select>
@@ -85,8 +91,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="TourStatus" class="form-label"></label>
-                            <select asp-for="TourStatus" class="form-control">
+                            <label asp-for="TourStatus" class="form-label">Trạng thái</label>
+                            <select asp-for="TourStatus" class="form-control" required>
+                                <option value="">-- Chọn trạng thái --</option>
                                 <option value="Upcoming">Sắp diễn ra</option>
                                 <option value="Ongoing">Đang diễn ra</option>
                                 <option value="Completed">Đã hoàn thành</option>
@@ -94,25 +101,59 @@
                             </select>
                             <span asp-validation-for="TourStatus" class="text-danger"></span>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="imageInput">Hình ảnh</label>
-                            <input type="file" name="ImageFile" class="form-control" accept="image/*" id="imageInput" />
-                            <div class="mt-2" id="imagePreview">
-                                @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                                {
-                                    <img src="@Url.Content($"~/{Model.ImageUrl}")" style="max-height: 100px;" class="img-thumbnail">
-                                    <a href="@Url.Content($"~/{Model.ImageUrl}")" target="_blank">Xem ảnh</a>
-                                }
+                <!-- Image Upload Section -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="fas fa-image me-1"></i>
+                                Hình ảnh Tour
                             </div>
-                            @Html.ValidationMessage("ImageFile", new { @class = "text-danger" })
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="mb-3">
+                                            <label for="ImageFile" class="form-label">Upload ảnh mới (nếu muốn thay đổi)</label>
+                                            <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" aria-describedby="imageHelp" title="Chọn ảnh mới cho tour" />
+                                            <div id="imageHelp" class="form-text">Only JPG, PNG files (Max 5MB)</div>
+                                            @Html.ValidationMessage("ImageFile", new { @class = "text-danger" })
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                                        {
+                                            <div class="mb-3">
+                                                <label class="form-label">Ảnh hiện tại</label>
+                                                <div>
+                                                    <img src="@Url.Content(Model.ImageUrl)" alt="Ảnh hiện tại" class="img-thumbnail" style="max-height: 200px;" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex justify-content-center align-items-center h-100">
+                                            <button type="button" class="btn btn-outline-primary" id="previewImageBtn" disabled>
+                                                <i class="fas fa-eye me-1"></i> Xem trước ảnh
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3" id="imagePreviewContainer" style="display: none;">
+                                    <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a asp-controller="Admin" asp-action="ManageTours" class="btn btn-secondary">Quay lại</a>
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <a asp-controller="Admin" asp-action="ManageTours" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
                 </div>
             </form>
         </div>
@@ -122,72 +163,97 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Hiển thị bản xem trước của ảnh khi chọn file
-            $('#imageInput').change(function() {
+            // Tự động tính Duration khi thay đổi ngày
+            function updateDuration() {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                if (startDate && endDate && startDate < endDate) {
+                    const diff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    $('#Duration').val(diff);
+                } else {
+                    $('#Duration').val('');
+                }
+            }
+
+            $('#StartDate, #EndDate').on('change', updateDuration);
+            updateDuration(); // Tính giá trị ban đầu
+
+            // Xem trước ảnh khi upload
+            $('input[name="ImageFile"]').change(function() {
                 const file = this.files[0];
+                const preview = $('#imagePreview');
+                const previewContainer = $('#imagePreviewContainer');
+                const previewBtn = $('#previewImageBtn');
+
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        $('#imagePreview').html(`
-                            <img src="${e.target.result}" style="max-height: 100px;" class="img-thumbnail">
-                            <a href="${e.target.result}" target="_blank">Xem ảnh</a>
-                        `);
-                    };
+                        preview.attr('src', e.target.result);
+                        previewContainer.show();
+                        previewBtn.prop('disabled', false);
+                    }
                     reader.readAsDataURL(file);
                 } else {
-                    $('#imagePreview').html('');
+                    preview.attr('src', '#');
+                    previewContainer.hide();
+                    previewBtn.prop('disabled', true);
                 }
             });
 
-            // Tính toán Duration khi thay đổi ngày
-            $('#StartDate, #EndDate').change(function() {
-                const startDate = new Date($('#StartDate').val());
-                const endDate = new Date($('#EndDate').val());
-
-                if (startDate && endDate && startDate <= endDate) {
-                    const dayDiff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-                    $('#Duration').val(dayDiff);
-                }
+            $('#previewImageBtn').click(function() {
+                $('#imagePreviewContainer').toggle();
             });
 
             // Kiểm tra ràng buộc khi submit form
             $('form').submit(function(e) {
                 const startDate = new Date($('#StartDate').val());
                 const endDate = new Date($('#EndDate').val());
-                const duration = parseInt($('#Duration').val());
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
                 const availableSeats = parseInt($('#AvailableSeats').val());
 
-                // Kiểm tra ngày đi < ngày về
+                if (startDate < today) {
+                    e.preventDefault();
+                    alert('Ngày đi phải lớn hơn hoặc bằng ngày hiện tại.');
+                    $('#StartDate').focus();
+                    return false;
+                }
                 if (startDate >= endDate) {
+                    e.preventDefault();
                     alert('Ngày về phải sau ngày đi.');
-                    e.preventDefault();
+                    $('#EndDate').focus();
                     return false;
                 }
-
-                // Kiểm tra tour không quá 30 ngày
-                const dayDiff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-                if (dayDiff > 30) {
+                if ((endDate - startDate) / (1000 * 60 * 60 * 24) + 1 > 30) {
+                    e.preventDefault();
                     alert('Tour không được vượt quá 30 ngày.');
-                    e.preventDefault();
+                    $('#EndDate').focus();
                     return false;
                 }
-
-                // Kiểm tra Duration khớp với ngày đi/về
-                if (dayDiff != duration) {
-                    alert(`Thời gian tour không khớp với ngày đi và ngày về. Dự kiến: ${dayDiff} ngày`);
-                    e.preventDefault();
-                    return false;
-                }
-
-                // Kiểm tra số chỗ không âm
                 if (availableSeats < 0) {
-                    alert('Số chỗ không được nhỏ hơn 0.');
                     e.preventDefault();
+                    alert('Số chỗ không được nhỏ hơn 0.');
+                    $('#AvailableSeats').focus();
                     return false;
                 }
 
                 return true;
             });
+
+            // Form validation HTML5
+            (function() {
+                'use strict';
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
         });
     </script>
 }

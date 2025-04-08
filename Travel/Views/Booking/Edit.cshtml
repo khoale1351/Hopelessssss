@@ -1,0 +1,100 @@
+﻿@model Travel.Models.Booking
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Đặt Tour";
+    Layout = "_LayoutAdmin";
+}
+
+<div class="container my-5">
+    <h2 class="mb-4">Chỉnh sửa Đặt Tour</h2>
+
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="BookingId" />
+
+        <div class="mb-3">
+            <label asp-for="UserId" class="form-label">User ID</label>
+            <input type="text" asp-for="UserId" class="form-control" readonly />
+            <span asp-validation-for="UserId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TourId" class="form-label">Tour</label>
+            <select asp-for="TourId" class="form-select" asp-items="ViewBag.Tours">
+                <option value="">Chọn Tour</option>
+            </select>
+            <span asp-validation-for="TourId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NumberOfAdults" class="form-label">Số người lớn</label>
+            <input type="number" asp-for="NumberOfAdults" class="form-control" />
+            <span asp-validation-for="NumberOfAdults" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NumberOfChildren" class="form-label">Số trẻ em</label>
+            <input type="number" asp-for="NumberOfChildren" class="form-control" />
+            <span asp-validation-for="NumberOfChildren" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TotalPrice" class="form-label">Tổng giá</label>
+            <input type="number" asp-for="TotalPrice" class="form-control" step="0.01" readonly />
+            <span asp-validation-for="TotalPrice" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="BookingDate" class="form-label">Ngày đặt</label>
+            <input type="date" asp-for="BookingDate" class="form-control" readonly />
+            <span asp-validation-for="BookingDate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Status" class="form-label">Trạng thái</label>
+            <select asp-for="Status" class="form-select" asp-items="ViewBag.StatusList">
+                <option value="">Chọn trạng thái</option>
+            </select>
+            <span asp-validation-for="Status" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="PaymentStatus" class="form-label">Trạng thái thanh toán</label>
+            <select asp-for="PaymentStatus" class="form-select" asp-items="ViewBag.PaymentStatusList">
+                <option value="">Chọn trạng thái thanh toán</option>
+            </select>
+            <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
+            <input type="date" asp-for="StartDate" class="form-control" />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DiscountAmountApplied" class="form-label">Số tiền giảm giá</label>
+            <input type="number" asp-for="DiscountAmountApplied" class="form-control" />
+            <span asp-validation-for="DiscountAmountApplied" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DiscountPercentageApplied" class="form-label">Phần trăm giảm giá</label>
+            <input type="number" asp-for="DiscountPercentageApplied" class="form-control" />
+            <span asp-validation-for="DiscountPercentageApplied" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            var totalPriceInput = document.querySelector('input[name="TotalPrice"]');
+            if (totalPriceInput) {
+                totalPriceInput.value = totalPriceInput.value.replace(',', '.');
+            }
+        });
+    </script>
+}

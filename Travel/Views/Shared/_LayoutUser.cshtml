@@ -3,114 +3,24 @@
 @inject UserManager<ApplicationUser> UserManager
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Travel Website</title>
     <link rel="stylesheet" href="~/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Liên kết đến file layoutUser.css -->
+    <link rel="stylesheet" href="~/css/layoutUser.css">
+    <!--Front-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />    <!--Boostap 5.3.0-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: White;
-        }
-
-        .search-box {
-            position: relative; /* Đổi từ absolute sang relative để hiển thị inline */
-            background: white;
-            height: 40px;
-            border-radius: 40px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 0 10px; /* Thêm margin để tạo khoảng cách */
-        }
-
-            .search-box:hover > .search-txt {
-                width: 150px; /* Giảm chiều rộng để phù hợp với navbar */
-                padding: 0 6px;
-            }
-
-            .search-box:hover > .search-btn {
-                background: white;
-                color: black;
-            }
-
-        .search-btn {
-            color: #eeeeee;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #2f3640;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: 0.4s;
-            color: white;
-            cursor: pointer;
-            text-decoration: none;
-            margin-right: 0;
-        }
-
-            .search-btn > i {
-                font-size: 20px;
-                line-height: 40px;
-            }
-
-        .search-txt {
-            border: none;
-            background: none;
-            outline: none;
-            padding: 0 6px;
-            color: black;
-            font-size: 16px;
-            transition: 0.4s;
-            line-height: 40px;
-            width: 0px;
-            font-weight: bold;
-        }
-
-        .search-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            display: none;
-        }
-
-        .dropdown-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-            .dropdown-list li {
-                padding: 10px;
-                cursor: pointer;
-                border-bottom: 1px solid #eee;
-            }
-
-                .dropdown-list li:hover {
-                    background: #f0f0f0;
-                }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+    <nav class="navbar navbar-expand-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">TravelAll</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,9 +28,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/Tour/Book">Book a Tour</a></li>
-                    <li><a href="/Forum">Forum</a></li>
+                    <li><a href="/">Trang chủ</a></li>
+                    <li><a href="/Tour/Book">Đặt Tour</a></li>
+                    <li><a href="/Forum">Review</a></li>
+                    <li><a href="/Booking/Index">Tour của bạn</a></li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item d-flex align-items-center">
@@ -134,17 +45,23 @@
                             </div>
                         </div>
                     </li>
+                    <button id="toggleThemeBtn" class="btn btn-outline-light ms-2">🌗</button>
                     @if (SignInManager.IsSignedIn(User))
                     {
                         var user = await UserManager.GetUserAsync(User);
-                        <li class="nav-item">
-                            <span class="nav-link text-white">Chào, @user.FullName!</span>
-                        </li>
-                        <li><a class="dropdown-item" href="Profile">Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="Settings">Cài đặt</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Chào, @user.FullName!
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="Profile">Hồ sơ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" asp-controller="Account" asp-action="Logout" style="margin: 0;">
+                                        <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     }
                     else
@@ -156,6 +73,7 @@
                             <a class="nav-link text-white" asp-controller="Account" asp-action="Register">Đăng ký</a>
                         </li>
                     }
+
                 </ul>
             </div>
         </div>
@@ -192,7 +110,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer bg-dark text-white py-3">
+    <footer class="footer py-3">
         <div class="container">
             <div class="row">
                 <!-- Cột 1: Google Map -->
@@ -210,7 +128,7 @@
                                 <div class="package-img" style="background-image: url('https://via.placeholder.com/150');"></div>
                                 <div class="package-overlay">
                                     <div class="package-info">
-                                        <h3 class="package-heading">Thành viên 1</h3>
+                                        <h3 class="package-heading">Lê Đỗ Đăng Khoa</h3>
                                     </div>
                                 </div>
                             </div>
@@ -220,7 +138,7 @@
                                 <div class="package-img" style="background-image: url('https://via.placeholder.com/150');"></div>
                                 <div class="package-overlay">
                                     <div class="package-info">
-                                        <h3 class="package-heading">Thành viên 2</h3>
+                                        <h3 class="package-heading">Nguyễn Đình Hon</h3>
                                     </div>
                                 </div>
                             </div>
@@ -230,7 +148,7 @@
                                 <div class="package-img" style="background-image: url('https://via.placeholder.com/150');"></div>
                                 <div class="package-overlay">
                                     <div class="package-info">
-                                        <h3 class="package-heading">Thành viên 3</h3>
+                                        <h3 class="package-heading">Đinh Thế Vinh</h3>
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +158,7 @@
                                 <div class="package-img" style="background-image: url('https://via.placeholder.com/150');"></div>
                                 <div class="package-overlay">
                                     <div class="package-info">
-                                        <h3 class="package-heading">Thành viên 4</h3>
+                                        <h3 class="package-heading">Trần Nguyễn Hoàng Vũ</h3>
                                     </div>
                                 </div>
                             </div>
@@ -340,9 +258,31 @@
                 }
             });
         });
+
+        //Theme
+                document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('toggleThemeBtn');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light'; // Mặc định là light nếu không có theme lưu
+
+            // Áp dụng theme ban đầu
+            html.setAttribute('data-bs-theme', savedTheme);
+            btn.textContent = savedTheme === 'dark' ? '🌞' : '🌗';
+
+            // Xử lý khi nhấn nút
+            btn.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                html.setAttribute('data-bs-theme', newTheme);
+                btn.textContent = newTheme === 'dark' ? '🌞' : '🌗';
+                localStorage.setItem('theme', newTheme);
+            });
+        });
     </script>
 
     <!-- Render section Scripts cho các trang con -->
     @RenderSection("Scripts", required: false)
+    @RenderSection("Styles", required: false)
 </body>
 </html>

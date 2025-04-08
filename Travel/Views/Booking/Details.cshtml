@@ -28,9 +28,9 @@
                         {
                             <p><strong>Giảm Giá (%):</strong> @Model.DiscountPercentageApplied%</p>
                         }
-                        <p><strong>Số Tiền Giảm:</strong> @Model.DiscountAmountApplied?.ToString("C")</p>
+                        <p><strong>Số Tiền Giảm:</strong> @string.Format("{0:N0} VNĐ", Model.DiscountAmountApplied)</p>
                     }
-                    <p><strong>Tổng Giá:</strong> @Model.TotalPrice.ToString("C")</p>
+                    <p><strong>Tổng Giá:</strong> @string.Format("{0:N0} VNĐ", Model.TotalPrice)</p>
                     <p><strong>Trạng Thái:</strong> @Model.Status</p>
                     <p><strong>Trạng Thái Thanh Toán:</strong> @Model.PaymentStatus</p>
                     <a href="@Url.Action("Index", "Booking")" class="btn btn-secondary w-100">Quay Lại</a>

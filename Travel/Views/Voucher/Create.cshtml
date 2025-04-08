@@ -1,52 +1,76 @@
 ﻿@model Travel.Models.Voucher
 
 @{
-    ViewData["Title"] = "Create New Voucher";
+    ViewData["Title"] = "Create Voucher";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container my-5">
+    <h1 class="text-center mb-4">Create New Voucher</h1>
+    <form asp-action="CreateVoucher" method="post">
+        @Html.AntiForgeryToken()
 
-<form asp-action="Create" method="post">
-    <div class="form-group">
-        <label asp-for="Code" class="control-label"></label>
-        <input asp-for="Code" class="form-control" />
-        <span asp-validation-for="Code" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Description" class="control-label"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="DiscountAmount" class="control-label"></label>
-        <input asp-for="DiscountAmount" class="form-control" />
-        <span asp-validation-for="DiscountAmount" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="DiscountPercentage" class="control-label"></label>
-        <input asp-for="DiscountPercentage" class="form-control" />
-        <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="ExpiryDate" class="control-label"></label>
-        <input asp-for="ExpiryDate" class="form-control" type="date" />
-        <span asp-validation-for="ExpiryDate" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="UsageLimit" class="control-label"></label>
-        <input asp-for="UsageLimit" class="form-control" />
-        <span asp-validation-for="UsageLimit" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="UsageCount" class="control-label"></label>
-        <input asp-for="UsageCount" class="form-control" />
-        <span asp-validation-for="UsageCount" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="IsActive" class="control-label"></label>
-        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-        <span asp-validation-for="IsActive" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Create</button>
-    <a href="@Url.Action("Index")" class="btn btn-secondary">Back to List</a>
-</form>
+        <div class="form-group">
+            <label asp-for="Code" class="control-label"></label>
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description" class="control-label"></label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DiscountAmount" class="control-label"></label>
+            <input asp-for="DiscountAmount" class="form-control" />
+            <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DiscountPercentage" class="control-label"></label>
+            <input asp-for="DiscountPercentage" class="form-control" />
+            <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="MinimumBookingValue" class="control-label"></label>
+            <input asp-for="MinimumBookingValue" class="form-control" />
+            <span asp-validation-for="MinimumBookingValue" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="MaxDiscountAmount" class="control-label"></label>
+            <input asp-for="MaxDiscountAmount" class="form-control" />
+            <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ExpiryDate" class="control-label"></label>
+            <input asp-for="ExpiryDate" class="form-control" type="date" />
+            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="UsageLimit" class="control-label"></label>
+            <input asp-for="UsageLimit" class="form-control" />
+            <span asp-validation-for="UsageLimit" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="UsageCount" class="control-label"></label>
+            <input asp-for="UsageCount" class="form-control" />
+            <span asp-validation-for="UsageCount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive" class="control-label"></label>
+            <input asp-for="IsActive" class="form-control" type="checkbox" />
+            <span asp-validation-for="IsActive" class="text-danger"></span>
+        </div>
+
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary">Save Voucher</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,221 @@
+﻿body {
+    margin: 0;
+    padding: 0;
+}
+
+.search-box {
+    position: relative;
+    background: white;
+    height: 40px;
+    border-radius: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 10px;
+}
+
+    .search-box:hover > .search-txt {
+        width: 150px;
+        padding: 0 6px;
+    }
+
+    .search-box:hover > .search-btn {
+        background: white;
+        color: black;
+    }
+
+.search-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.4s;
+    cursor: pointer;
+    text-decoration: none;
+    margin-right: 0;
+}
+
+    .search-btn > i {
+        font-size: 20px;
+        line-height: 40px;
+    }
+
+.search-txt {
+    border: none;
+    background: none;
+    outline: none;
+    padding: 0 6px;
+    font-size: 16px;
+    transition: 0.4s;
+    line-height: 40px;
+    width: 0px;
+    font-weight: bold;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: none;
+}
+
+.dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .dropdown-list li {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+
+/* Theme-specific styles */
+[data-bs-theme="light"] .navbar {
+    background-color: #f8f9fa !important;
+}
+
+[data-bs-theme="dark"] .navbar {
+    background-color: #2f3640 !important;
+}
+
+/* Tên "TravelAll" */
+[data-bs-theme="light"] .navbar-brand {
+    color: #333 !important;
+}
+
+[data-bs-theme="dark"] .navbar-brand {
+    color: #f8f9fa !important;
+}
+
+/* Các liên kết điều hướng (Home, Book a Tour, Forum) */
+[data-bs-theme="light"] .navbar-nav a {
+    color: #333 !important;
+}
+
+[data-bs-theme="dark"] .navbar-nav a {
+    color: #f8f9fa !important;
+}
+
+[data-bs-theme="light"] .navbar-nav a:hover {
+    color: #007bff !important;
+}
+
+[data-bs-theme="dark"] .navbar-nav a:hover {
+    color: #66b0ff !important;
+}
+
+/* Nút toggler (biểu tượng hamburger) */
+[data-bs-theme="light"] .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+[data-bs-theme="dark"] .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+[data-bs-theme="light"] .search-btn {
+    background: #f8f9fa !important;
+    color: black !important;
+}
+
+[data-bs-theme="dark"] .search-btn {
+    background: #2f3640 !important;
+    color: white !important;
+}
+
+[data-bs-theme="light"] .search-box {
+    background: #2f3640 !important;
+}
+
+[data-bs-theme="dark"] .search-box {
+    background: white !important;
+}
+
+[data-bs-theme="light"] .search-txt {
+    color: white !important;
+}
+
+[data-bs-theme="dark"] .search-txt {
+    color: black !important;
+}
+
+
+[data-bs-theme="light"] .search-dropdown {
+    background: white !important;
+    border: 1px solid #ccc !important;
+}
+
+[data-bs-theme="dark"] .search-dropdown {
+    background: #2f3640 !important;
+    border: 1px solid #666 !important;
+}
+
+/* Màu chữ mặc định cho các mục trong dropdown */
+[data-bs-theme="light"] .dropdown-item {
+    color: #000 !important; /* Chữ đen cho theme sáng */
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+    color: #000 !important; /* Chữ trắng cho theme tối */
+}
+
+/* Hiệu ứng hover cho các mục trong dropdown (áp dụng cho cả hai theme) */
+.dropdown-item:hover {
+    background-color: #000 !important; /* Nền đen khi hover */
+    color: #fff !important; /* Chữ trắng khi hover */
+    border-radius: 5px !important; /* Bo góc */
+}
+
+/* Đảm bảo dropdown menu có nền phù hợp với theme */
+[data-bs-theme="light"] .dropdown-menu {
+    background-color: #fff !important; /* Nền trắng cho theme sáng */
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #2f3640 !important; /* Nền tối cho theme tối */
+}
+
+/* Cố định màu chữ và font cho display-4 */
+.display-4 {
+    color: #fff !important; /* Màu trắng cố định */
+    font-family: 'Poppins', sans-serif !important; /* Font hiện đại */
+}
+
+/* Nút "Giao diện tối/sáng" */
+[data-bs-theme="light"] #toggleThemeBtn {
+    color: #2f3640 !important;
+    border-color: #2f3640 !important;
+}
+
+[data-bs-theme="dark"] #toggleThemeBtn {
+    color: #f8f9fa !important;
+    border-color: #f8f9fa !important;
+}
+
+/* Các thành phần khác */
+[data-bs-theme="light"] h2{
+    color: Black !important;
+}
+
+[data-bs-theme="dark"] h2{
+    color: White !important;
+}
+
+[data-bs-theme="light"] .nav-item.dropdown .nav-link {
+    color: #333 !important;
+}
+
+[data-bs-theme="dark"] .nav-item.dropdown .nav-link {
+    color: #f8f9fa !important;
+}

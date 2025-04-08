@@ -1,81 +1,311 @@
 ﻿@model Travel.ViewModels.TourViewModel
 
 @{
-    ViewData["Title"] = "Create Tour";
+    ViewData["Title"] = "Create New Tour";
+    Layout = "_LayoutAdmin";
 }
 
-<h2>Create New Tour</h2>
+<div class="container-fluid px-4">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-map-marked-alt me-1"></i>
+            Tour Information
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="TourName" class="form-label">Tour Name</label>
+                            <input asp-for="TourName" class="form-control" required />
+                            <span asp-validation-for="TourName" class="text-danger"></span>
+                        </div>
 
-<form asp-action="Create" method="post">
-    <div class="form-group">
-        <label asp-for="TourName"></label>
-        <input asp-for="TourName" class="form-control" />
-        <span asp-validation-for="TourName" class="text-danger"></span>
-    </div>
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="Description"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Destination</label>
+                            <div class="position-relative">
+                                <input type="text" id="destinationSearch" class="form-control" placeholder="Search destinations..." required />
+                                <input type="hidden" asp-for="DestinationId" id="selectedDestinationId" />
+                                <span asp-validation-for="DestinationId" class="text-danger"></span>
+                                <div id="destinationResults" class="list-group mt-1 shadow" style="display:none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="Price"></label>
-        <input asp-for="Price" class="form-control" type="number" step="0.01" />
-        <span asp-validation-for="Price" class="text-danger"></span>
-    </div>
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price" class="form-label">Price (VND)</label>
+                                <div class="input-group">
+                                    <input asp-for="Price" class="form-control" type="number" step="1000" min="0" required />
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
 
-    <div class="form-group">
-        <label asp-for="Duration"></label>
-        <input asp-for="Duration" class="form-control" type="number" />
-        <span asp-validation-for="Duration" class="text-danger"></span>
-    </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Duration" class="form-label">Duration (days)</label>
+                                <input asp-for="Duration" class="form-control" type="number" readonly />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                            </div>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="StartDate"></label>
-        <input asp-for="StartDate" class="form-control" type="date" />
-        <span asp-validation-for="StartDate" class="text-danger"></span>
-    </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label">Start Date</label>
+                                <input asp-for="StartDate" class="form-control" type="date" required />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
 
-    <div class="form-group">
-        <label asp-for="EndDate"></label>
-        <input asp-for="EndDate" class="form-control" type="date" />
-        <span asp-validation-for="EndDate" class="text-danger"></span>
-    </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label">End Date</label>
+                                <input asp-for="EndDate" class="form-control" type="date" required />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="AvailableSeats"></label>
-        <input asp-for="AvailableSeats" class="form-control" type="number" />
-        <span asp-validation-for="AvailableSeats" class="text-danger"></span>
-    </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AvailableSeats" class="form-label">Available Seats</label>
+                                <input asp-for="AvailableSeats" class="form-control" type="number" min="1" required />
+                                <span asp-validation-for="AvailableSeats" class="text-danger"></span>
+                            </div>
 
-    <div class="form-group">
-        <label asp-for="TourType"></label>
-        <select asp-for="TourType" class="form-control">
-            <option value="Private">Private</option>
-            <option value="Group">Group</option>
-        </select>
-    </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TourType" class="form-label">Tour Type</label>
+                                <select asp-for="TourType" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="Private">Private Tour</option>
+                                    <option value="Group">Group Tour</option>
+                                </select>
+                            </div>
+                        </div>
 
-    <div class="form-group">
-        <label asp-for="TourStatus"></label>
-        <select asp-for="TourStatus" class="form-control">
-            <option value="Upcoming">Upcoming</option>
-            <option value="Ongoing">Ongoing</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-        </select>
-    </div>
+                        <div class="mb-3">
+                            <label asp-for="TourStatus" class="form-label">Tour Status</label>
+                            <select asp-for="TourStatus" class="form-select" required>
+                                <option value="">-- Select Status --</option>
+                                <option value="Upcoming">Upcoming</option>
+                                <option value="Ongoing">Ongoing</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label asp-for="DestinationId"></label>
-        <select asp-for="DestinationId" asp-items="@(new SelectList(Model.DestinationOptions, "DestinationId", "Name"))" class="form-control">
-            <option value="">-- Select Destination --</option>
-        </select>
-        <span asp-validation-for="DestinationId" class="text-danger"></span>
-    </div>
+                <!-- Image Upload Section -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="fas fa-image me-1"></i>
+                                Tour Image (Required)
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="mb-3">
+                                            <label asp-for="ImageFile" class="form-label">Upload Image</label>
+                                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" required />
+                                            <div class="form-text">Only JPG, PNG files (Max 5MB)</div>
+                                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex justify-content-center align-items-center h-100">
+                                            <button type="button" class="btn btn-outline-primary" id="previewImageBtn" disabled>
+                                                <i class="fas fa-eye me-1"></i> Preview Image
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3" id="imagePreviewContainer" style="display: none;">
+                                    <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Create</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary me-2" id="submitBtn">
+                        <i class="fas fa-save me-1"></i> Create Tour
+                    </button>
+                    <a asp-controller="Admin" asp-action="ManageTours" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Set default dates to current year
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            $('#StartDate').val(formatDate(today));
+            $('#EndDate').val(formatDate(tomorrow));
+
+            // Tự động tính Duration khi thay đổi ngày
+            function updateDuration() {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                if (startDate && endDate && startDate < endDate) {
+                    const diff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    $('#Duration').val(diff);
+                } else {
+                    $('#Duration').val('');
+                }
+            }
+
+            $('#StartDate, #EndDate').on('change', updateDuration);
+            updateDuration(); // Gọi lần đầu để tính giá trị mặc định
+
+            // Image Preview Functionality
+            $('#ImageFile').change(function() {
+                const file = this.files[0];
+                const preview = $('#imagePreview');
+                const previewContainer = $('#imagePreviewContainer');
+                const previewBtn = $('#previewImageBtn');
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.attr('src', e.target.result);
+                        previewContainer.show();
+                        previewBtn.prop('disabled', false);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.attr('src', '#');
+                    previewContainer.hide();
+                    previewBtn.prop('disabled', true);
+                }
+            });
+
+            $('#previewImageBtn').click(function() {
+                $('#imagePreviewContainer').toggle();
+            });
+
+            // Validate form trước khi submit
+            $('form').submit(function(e) {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (startDate < today) {
+                    e.preventDefault();
+                    alert('Ngày đi phải lớn hơn hoặc bằng ngày hiện tại.');
+                    $('#StartDate').focus();
+                    return false;
+                }
+                if (startDate >= endDate) {
+                    e.preventDefault();
+                    alert('Ngày về phải sau ngày đi.');
+                    $('#EndDate').focus();
+                    return false;
+                }
+                if ((endDate - startDate) / (1000 * 60 * 60 * 24) + 1 > 30) {
+                    e.preventDefault();
+                    alert('Tour không được vượt quá 30 ngày.');
+                    $('#EndDate').focus();
+                    return false;
+                }
+                if (!$('#ImageFile').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng upload ảnh cho tour.');
+                    $('#ImageFile').focus();
+                    return false;
+                }
+                return true;
+            });
+
+            // Destination search with debounce (giữ nguyên)
+            let searchTimeout;
+            $('#destinationSearch').on('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length >= 2) {
+                    searchTimeout = setTimeout(() => {
+                        $.getJSON('/Tour/SearchDestinations', { searchTerm: searchTerm })
+                            .done(function(data) {
+                                const resultsContainer = $('#destinationResults');
+                                resultsContainer.empty();
+                                if (data && data.length > 0) {
+                                    data.forEach(function(destination) {
+                                        const displayText = `${destination.name} - ${destination.city}, ${destination.country}`;
+                                        resultsContainer.append(
+                                            `<a href="#" class="list-group-item list-group-item-action"
+                                               data-id="${destination.destinationId}"
+                                               data-name="${displayText}">
+                                                ${displayText}
+                                            </a>`
+                                        );
+                                    });
+                                    resultsContainer.show();
+                                } else {
+                                    resultsContainer.hide();
+                                }
+                            })
+                            .fail(function(jqXHR, textStatus, errorThrown) {
+                                console.error("Error fetching destinations:", textStatus, errorThrown);
+                            });
+                    }, 300);
+                } else {
+                    $('#destinationResults').hide();
+                }
+            });
+
+            $(document).on('click', '#destinationResults .list-group-item', function(e) {
+                e.preventDefault();
+                const destinationId = $(this).data('id');
+                const destinationName = $(this).data('name');
+                $('#destinationSearch').val(destinationName);
+                $('#selectedDestinationId').val(destinationId);
+                $('#destinationResults').hide();
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#destinationSearch, #destinationResults').length) {
+                    $('#destinationResults').hide();
+                }
+            });
+
+            // Form validation
+            (function() {
+                'use strict';
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+        });
+    </script>
+}

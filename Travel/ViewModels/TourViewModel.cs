@@ -20,5 +20,6 @@ namespace Travel.ViewModels
         public IEnumerable<SelectListItem>? DestinationOptions { get; set; }
 
         public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }

@@ -22,9 +22,9 @@
                 <i class="fas fa-map-marked-alt me-1"></i>
                 Danh sách Tour
             </div>
-            <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addTourModal">
+            <a href="@Url.Action("Create", "Tour")" class="btn btn-light">
                 <i class="fas fa-plus me-1"></i> Thêm Tour
-            </button>
+            </a>
         </div>
 
         <div class="card-body">
@@ -53,7 +53,7 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(item.ImageUrl))
                                     {
-                                        <img src="~/@item.ImageUrl" alt="Ảnh tour" style="width: 80px; height: 60px; object-fit: cover;" class="img-thumbnail" />
+                                        <img src="@Url.Content(item.ImageUrl)" alt="Ảnh tour" style="width: 80px; height: 60px; object-fit: cover;" class="img-thumbnail" />
                                     }
                                     else
                                     {
@@ -72,7 +72,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge @GetTypeBadgeClass(item.TourType)">
+                                    <span class="badge text-dark @GetTypeBadgeClass(item.TourType)">
                                         @GetTypeDisplay(item.TourType)
                                     </span>
                                 </td>
@@ -82,14 +82,14 @@
                                                 data-bs-target="#detailTourModal" data-id="@item.TourId">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="btn btn-warning me-1" title="Chỉnh sửa" data-bs-toggle="modal"
-                                                data-bs-target="#editTourModal" data-id="@item.TourId">
+                                        <a href="@Url.Action("Edit", "Tour", new { id = item.TourId })"
+                                           class="btn btn-warning me-1" title="Chỉnh sửa">
                                             <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger delete-btn" title="Xóa"
-                                                data-id="@item.TourId" data-name="@item.TourName">
+                                        </a>
+                                        <a href="@Url.Action("Delete", "Tour", new { id = item.TourId })"
+                                           class="btn btn-danger" title="Xóa">
                                             <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -101,94 +101,7 @@
     </div>
 </div>
 
-<!-- Modal Thêm Tour -->
-<div class="modal fade" id="addTourModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Thêm Tour Mới</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form asp-action="Create" asp-controller="Tour" method="post" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="TourName">Tên Tour</label>
-                            <input type="text" class="form-control" id="TourName" name="TourName" required>
-                            <span asp-validation-for="TourName" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="destinationDropdown">Điểm đến</label>
-                            <select class="form-control select2-destination" name="DestinationId" id="destinationDropdown" required>
-                                <option value="" disabled selected>Tìm kiếm điểm đến...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="form-label" for="Description">Mô tả</label>
-                            <textarea class="form-control" id="Description" name="Description" rows="3"></textarea>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label" for="Price">Giá (VNĐ)</label>
-                            <input type="number" class="form-control" id="Price" name="Price" min="0" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="Duration">Thời gian (ngày)</label>
-                            <input type="number" class="form-control" id="Duration" name="Duration" min="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="AvailableSeats">Số chỗ</label>
-                            <input type="number" class="form-control" id="AvailableSeats" name="AvailableSeats" min="0" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="StartDate">Ngày bắt đầu</label>
-                            <input type="date" class="form-control" id="StartDate" name="StartDate" required>
-                            <span asp-validation-for="StartDate" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="EndDate">Ngày kết thúc</label>
-                            <input type="date" class="form-control" id="EndDate" name="EndDate" required>
-                            <span asp-validation-for="EndDate" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="TourType">Loại Tour</label>
-                            <select class="form-select" id="TourType" name="TourType" required>
-                                <option value="Private">Private</option>
-                                <option value="Group">Group</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="TourStatus">Trạng thái</label>
-                            <select class="form-select" id="TourStatus" name="TourStatus" required>
-                                <option value="Upcoming">Sắp diễn ra</option>
-                                <option value="Ongoing">Đang diễn ra</option>
-                                <option value="Completed">Đã hoàn thành</option>
-                                <option value="Cancelled">Đã hủy</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="ImageFile">Hình ảnh</label>
-                        <input class="form-control" type="file" id="ImageFile" name="ImageFile" accept="image/*">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary">Lưu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Chi tiết Tour -->
+<!-- Modal Chi tiết Tour (giữ nguyên) -->
 <div class="modal fade" id="detailTourModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -206,50 +119,6 @@
     </div>
 </div>
 
-<!-- Modal Sửa Tour -->
-<div class="modal fade" id="editTourModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title">Chỉnh sửa Tour</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editTourForm" method="post" enctype="multipart/form-data">
-                <div class="modal-body" id="editTourContent">
-                    <!-- Nội dung sẽ được load bằng AJAX -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-warning text-white">Cập nhật</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Xác nhận xóa -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bạn có chắc chắn muốn xóa tour <strong id="tourNameToDelete"></strong> không?</p>
-                <p class="text-danger">Tất cả booking và đánh giá liên quan sẽ bị xóa!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post" asp-controller="Tour" asp-action="DeleteTour">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" id="deleteTourId" />
-                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 @functions {
     string GetStatusBadgeClass(string status)
     {
@@ -294,164 +163,4 @@
             _ => type
         };
     }
-}
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            // Kiểm tra jQuery và Select2
-            console.log('jQuery version:', $.fn.jquery);
-            console.log('Select2 loaded:', typeof $.fn.select2 !== 'undefined');
-
-            // Khởi tạo Select2
-            $('#destinationDropdown').select2({
-                placeholder: "Nhập tên điểm đến hoặc chọn từ danh sách...",
-                allowClear: true,
-                width: '100%',
-                dropdownParent: $('#addTourModal'),
-                ajax: {
-                    url: '/Tour/SearchDestinations',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        console.log('Gửi yêu cầu AJAX với searchTerm:', params.term || '');
-                        return {
-                            searchTerm: params.term || ''
-                        };
-                    },
-                    processResults: function (data) {
-                        console.log('Dữ liệu trả về từ SearchDestinations:', data);
-                        if (!Array.isArray(data)) {
-                            console.error('Dữ liệu không phải là mảng:', data);
-                            return { results: [] };
-                        }
-                        var results = data.map(function(item) {
-                            if (!item.destinationId || !item.name) {
-                                console.warn('Dữ liệu không hợp lệ:', item);
-                                return null;
-                            }
-                            return {
-                                id: item.destinationId,
-                                text: item.name + (item.city ? ' - ' + item.city : '') + (item.country ? ', ' + item.country : '')
-                            };
-                        }).filter(item => item !== null);
-                        return {
-                            results: results,
-                            pagination: {
-                                more: false
-                            }
-                        };
-                    },
-                    cache: true,
-                    error: function (xhr, status, error) {
-                        console.error('Lỗi khi gọi SearchDestinations:', xhr.status, error);
-                    }
-                },
-                minimumInputLength: 0,
-                templateResult: function (data) {
-                    return data.text;
-                },
-                templateSelection: function (data) {
-                    return data.text;
-                }
-            });
-
-            // Tự động mở dropdown với dữ liệu khi bấm vào
-            $('#destinationDropdown').on('select2:open', function () {
-                console.log('Mở dropdown');
-                $(this).data('select2').trigger('query', { term: '' });
-            });
-
-            // Xem chi tiết
-            $('#detailTourModal').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget);
-                var tourId = button.data('id');
-                $.get('/Tour/GetTourDetails/' + tourId)
-                    .done(function(data) {
-                        $('#detailTourContent').html(data);
-                    })
-                    .fail(function() {
-                        $('#detailTourContent').html('<div class="alert alert-danger">Không thể tải thông tin tour</div>');
-                    });
-            });
-
-            // Chỉnh sửa
-            $('#editTourModal').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget);
-                var tourId = button.data('id');
-                $.get('/Tour/GetEditTourForm/' + tourId)
-                    .done(function(data) {
-                        $('#editTourContent').html(data);
-                        $('select[name="DestinationId"]').select2({
-                            placeholder: "Chọn điểm đến...",
-                            width: '100%',
-                            dropdownParent: $('#editTourModal')
-                        });
-                    })
-                    .fail(function() {
-                        $('#editTourContent').html('<div class="alert alert-danger">Không thể tải form chỉnh sửa</div>');
-                    });
-            });
-
-            $(document).on('submit', '#editTourForm', function(e) {
-                e.preventDefault();
-                var formData = new FormData(this);
-                $.ajax({
-                    url: '/Tour/EditTour',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        if (response.redirect) {
-                            window.location.href = response.redirect;
-                        }
-                    },
-                    error: function (xhr) {
-                        alert('Lỗi khi cập nhật tour: ' + xhr.responseText);
-                    }
-                });
-            });
-
-                    // Xóa
-        $('.delete-btn').click(function () {
-            var tourId = $(this).data('id');
-            var tourName = $(this).data('name');
-            $('#tourNameToDelete').text(tourName);
-            $('#deleteTourId').val(tourId);
-            $('#deleteConfirmModal').modal('show');
-        });
-
-        $('#deleteForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            $.ajax({
-                url: '/Tour/DeleteTour',
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    if (response.success) {
-                        $('#deleteConfirmModal').modal('hide');
-                        if (response.redirect) {
-                            window.location.href = response.redirect;
-                        }
-                    } else {
-                        $('#deleteConfirmModal .modal-body').prepend(
-                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
-                            response.message +
-                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    $('#deleteConfirmModal .modal-body').prepend(
-                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
-                        'Lỗi khi xóa tour: ' + xhr.responseText +
-                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
-                    );
-                }
-            });
-        });
-        });
-    </script>
 }

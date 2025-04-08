@@ -1,0 +1,204 @@
+@model Travel.Models.ForumPost
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Bài viết -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">@Model.Title</h4>
+                    <div>
+                        @if (Model.IsPinned)
+                        {
+                            <span class="badge bg-warning me-2">📌 Đã ghim</span>
+                        }
+                        @if (Model.IsLocked)
+                        {
+                            <span class="badge bg-danger">🔒 Đã khóa</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            Đăng bởi: @Model.User?.FullName |
+                            Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm") |
+                            Lượt xem: @Model.ViewCount |
+                            Bình luận: @Model.Comments.Count
+                        </small>
+                    </div>
+                    <div class="post-content mb-3">
+                        @Html.Raw(Model.Content)
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary" onclick="likePost(@Model.PostId)">
+                                <i class="fas fa-thumbs-up"></i> Thích (@Model.LikeCount)
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="dislikePost(@Model.PostId)">
+                                <i class="fas fa-thumbs-down"></i> Không thích (@Model.DislikeCount)
+                            </button>
+                        </div>
+                        @if (User.IsInRole("Admin") || User.Identity?.Name == Model.UserId)
+                        {
+                            <div class="btn-group">
+                                <a href="@Url.Action("Edit", "Forum", new { id = Model.PostId })" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" onclick="deletePost(@Model.PostId)">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phần bình luận -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Bình luận (@Model.Comments.Count)</h4>
+                </div>
+                <div class="card-body">
+                    @if (User.Identity.IsAuthenticated && !Model.IsLocked)
+                    {
+                        <form asp-action="Comment" method="post" class="mb-4">
+                            <input type="hidden" name="PostId" value="@Model.PostId" />
+                            <div class="mb-3">
+                                <textarea name="Content" class="form-control" rows="3" 
+                                          placeholder="Viết bình luận của bạn..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Gửi bình luận</button>
+                        </form>
+                    }
+                    else if (Model.IsLocked)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-lock"></i> Bài viết đã bị khóa. Không thể thêm bình luận mới.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            Vui lòng <a href="@Url.Action("Login", "Account")">đăng nhập</a> để bình luận.
+                        </div>
+                    }
+
+                    <!-- Danh sách bình luận -->
+                    <div class="comments">
+                        @foreach (var comment in ViewBag.Comments)
+                        {
+                            <div class="comment mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <img src="@(string.IsNullOrEmpty(comment.User?.AvatarPath) ? "/images/avatars/default.png" : comment.User.AvatarPath)" 
+                                             class="rounded-circle" width="40" height="40" alt="Avatar">
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-0">@comment.UserName</h6>
+                                            <small class="text-muted">
+                                                @comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                        <p class="mb-1">@comment.Content</p>
+                                        @if (User.Identity.IsAuthenticated && !Model.IsLocked)
+                                        {
+                                            <button class="btn btn-link btn-sm p-0" 
+                                                    onclick="showReplyForm(@comment.CommentId)">
+                                                Trả lời
+                                            </button>
+                                            <div id="replyForm_@comment.CommentId" class="reply-form mt-2" style="display: none;">
+                                                <form asp-action="Comment" method="post">
+                                                    <input type="hidden" name="PostId" value="@Model.PostId" />
+                                                    <input type="hidden" name="ParentCommentId" value="@comment.CommentId" />
+                                                    <div class="mb-2">
+                                                        <textarea name="Content" class="form-control" rows="2" 
+                                                                  placeholder="Viết câu trả lời..."></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Gửi</button>
+                                                    <button type="button" class="btn btn-secondary btn-sm" 
+                                                            onclick="hideReplyForm(@comment.CommentId)">
+                                                        Hủy
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+
+                                        <!-- Hiển thị các câu trả lời -->
+                                        @if (comment.Replies != null && comment.Replies.Any())
+                                        {
+                                            <div class="replies ms-4 mt-2">
+                                                @foreach (var reply in comment.Replies)
+                                                {
+                                                    <div class="reply mb-2">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0">
+                                                                <img src="@(string.IsNullOrEmpty(reply.User?.AvatarPath) ? "/images/avatars/default.png" : reply.User.AvatarPath)" 
+                                                                     class="rounded-circle" width="30" height="30" alt="Avatar">
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-2">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <h6 class="mb-0">@reply.UserName</h6>
+                                                                    <small class="text-muted">
+                                                                        @reply.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                                    </small>
+                                                                </div>
+                                                                <p class="mb-0">@reply.Content</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showReplyForm(commentId) {
+            document.getElementById('replyForm_' + commentId).style.display = 'block';
+        }
+
+        function hideReplyForm(commentId) {
+            document.getElementById('replyForm_' + commentId).style.display = 'none';
+        }
+
+        function likePost(postId) {
+            $.post('@Url.Action("Like", "Forum")', { postId: postId }, function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function dislikePost(postId) {
+            $.post('@Url.Action("Dislike", "Forum")', { postId: postId }, function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function deletePost(postId) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                $.post('@Url.Action("Delete", "Forum")', { postId: postId }, function(response) {
+                    if (response.success) {
+                        window.location.href = '@Url.Action("Index", "Forum")';
+                    }
+                });
+            }
+        }
+    </script>
+} 

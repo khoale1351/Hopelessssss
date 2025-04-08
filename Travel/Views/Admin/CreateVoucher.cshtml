@@ -1,0 +1,156 @@
+﻿@model Travel.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Create Voucher";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">Tạo Voucher Mới</h1>
+
+    <form asp-action="CreateVoucher" method="post" id="voucherForm">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label asp-for="Code" class="control-label">Mã Voucher</label>
+            <input asp-for="Code" class="form-control" id="code" required />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description" class="control-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DiscountAmount" class="control-label">Số tiền giảm giá</label>
+            <input asp-for="DiscountAmount" class="form-control" id="discountAmount" />
+            <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DiscountPercentage" class="control-label">Phần trăm giảm giá</label>
+            <input asp-for="DiscountPercentage" class="form-control" id="discountPercentage" />
+            <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="MinimumBookingValue" class="control-label">Giá trị đặt tour tối thiểu</label>
+            <input asp-for="MinimumBookingValue" class="form-control" />
+            <span asp-validation-for="MinimumBookingValue" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="MaxDiscountAmount" class="control-label">Số tiền giảm tối đa</label>
+            <input asp-for="MaxDiscountAmount" class="form-control" />
+            <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ExpiryDate" class="control-label">Ngày hết hạn</label>
+            <input asp-for="ExpiryDate" class="form-control" type="date" id="expiryDate" required />
+            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+            <span id="expiryError" class="text-danger d-none">Ngày hết hạn không được nhỏ hơn ngày hiện tại.</span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="UsageLimit" class="control-label">Giới hạn sử dụng</label>
+            <input asp-for="UsageLimit" class="form-control" />
+            <span asp-validation-for="UsageLimit" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="UsageCount" class="control-label">Số lượng sử dụng</label>
+            <input asp-for="UsageCount" class="form-control" />
+            <span asp-validation-for="UsageCount" class="text-danger"></span>
+        </div>
+
+        <input asp-for="IsActive" type="hidden" value="true" />
+
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary">Tạo Voucher</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const codeInput = document.getElementById("code");
+            const codeErrorSpan = codeInput.nextElementSibling;
+
+            const discountAmountInput = document.getElementById("discountAmount");
+            const discountPercentageInput = document.getElementById("discountPercentage");
+            const discountAmountError = discountAmountInput.nextElementSibling;
+            const discountPercentageError = discountPercentageInput.nextElementSibling;
+
+            const expiryDateInput = document.getElementById("expiryDate");
+            const expiryError = document.getElementById("expiryError");
+
+            // Flags để kiểm tra người dùng đã nhập chưa
+            let hasTypedCode = false;
+            let hasTypedDiscount = false;
+            let hasPickedDate = false;
+
+            function validateCodeInput() {
+                if (!hasTypedCode) return;
+                const value = codeInput.value.trim();
+                codeErrorSpan.innerText = value === "" ? "Mã voucher không được để trống." : "";
+            }
+
+            function validateDiscountInputs() {
+                if (!hasTypedDiscount) return;
+
+                const amount = discountAmountInput.value.trim();
+                const percent = discountPercentageInput.value.trim();
+
+                // Disable một trong hai
+                discountPercentageInput.disabled = !!amount;
+                discountAmountInput.disabled = !!percent;
+
+                if (!amount && !percent) {
+                    discountAmountError.innerText = "Bạn phải nhập số tiền hoặc phần trăm giảm giá.";
+                    discountPercentageError.innerText = "Bạn phải nhập phần trăm hoặc số tiền giảm giá.";
+                } else {
+                    discountAmountError.innerText = "";
+                    discountPercentageError.innerText = "";
+                }
+            }
+
+            function validateExpiryDateInput() {
+                if (!hasPickedDate) return;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const selectedDate = new Date(expiryDateInput.value);
+                const isValid = expiryDateInput.value && selectedDate >= today;
+
+                expiryError.classList.toggle("d-none", isValid);
+            }
+
+            // Lắng nghe sự kiện input
+            codeInput.addEventListener("input", function () {
+                hasTypedCode = true;
+                validateCodeInput();
+            });
+
+            discountAmountInput.addEventListener("input", function () {
+                hasTypedDiscount = true;
+                validateDiscountInputs();
+            });
+
+            discountPercentageInput.addEventListener("input", function () {
+                hasTypedDiscount = true;
+                validateDiscountInputs();
+            });
+
+            expiryDateInput.addEventListener("change", function () {
+                hasPickedDate = true;
+                validateExpiryDateInput();
+            });
+        });
+    </script>
+}
+
+

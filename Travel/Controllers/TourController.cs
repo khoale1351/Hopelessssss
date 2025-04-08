@@ -54,8 +54,7 @@ public class TourController : Controller
                             d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                             (d.City != null && d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
                             (d.Country != null && d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-                .Select(d => new
-                {
+                .Select(d => new {
                     destinationId = d.DestinationId,
                     name = d.Name,
                     city = d.City,
@@ -68,7 +67,7 @@ public class TourController : Controller
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -84,35 +83,96 @@ public class TourController : Controller
     {
         try
         {
-            if (model.StartDate <= DateTime.Today)
+            // Ràng buộc ngày đi >= ngày hiện tại
+            if (model.StartDate < DateTime.Today)
             {
-                ModelState.AddModelError("StartDate", "Ngày bắt đầu phải lớn hơn ngày hiện tại.");
+                ModelState.AddModelError("StartDate", "Ngày đi phải lớn hơn hoặc bằng ngày hiện tại.");
             }
 
+            // Ràng buộc ngày đi < ngày về
             if (model.StartDate >= model.EndDate)
             {
-                ModelState.AddModelError("StartDate", "Ngày bắt đầu phải trước ngày kết thúc.");
+                ModelState.AddModelError("EndDate", "Ngày về phải sau ngày đi.");
             }
 
-            if ((model.EndDate - model.StartDate).TotalDays > 30)
+            // Tính thời gian tour tự động
+            var dayDiff = (model.EndDate - model.StartDate).Days + 1;
+            model.Duration = dayDiff; // Gán giá trị tự động
+
+            // Ràng buộc thời gian tour <= 30 ngày
+            if (dayDiff > 30)
             {
-                ModelState.AddModelError("EndDate", "Thời gian kết thúc không được cách ngày bắt đầu quá 30 ngày.");
+                ModelState.AddModelError("EndDate", "Tour không được vượt quá 30 ngày.");
             }
+
+            // Ràng buộc số chỗ không âm
+            if (model.AvailableSeats < 0)
+            {
+                ModelState.AddModelError("AvailableSeats", "Số chỗ không được nhỏ hơn 0.");
+            }
+
+            // Ràng buộc các trường không được để trống (đã được xử lý bằng required trong view, nhưng kiểm tra lại ở đây cho chắc)
+            if (string.IsNullOrEmpty(model.TourName))
+            {
+                ModelState.AddModelError("TourName", "Tên tour không được để trống.");
+            }
+            if (model.Price <= 0) // Giá phải lớn hơn 0
+            {
+                ModelState.AddModelError("Price", "Giá tour phải lớn hơn 0.");
+            }
+            if (model.StartDate == default(DateTime))
+            {
+                ModelState.AddModelError("StartDate", "Ngày đi không được để trống.");
+            }
+            if (model.EndDate == default(DateTime))
+            {
+                ModelState.AddModelError("EndDate", "Ngày về không được để trống.");
+            }
+            if (model.AvailableSeats == null || model.AvailableSeats < 0)
+            {
+                ModelState.AddModelError("AvailableSeats", "Số chỗ không được để trống và phải lớn hơn hoặc bằng 0.");
+            }
+
             if (ModelState.IsValid)
             {
+                string? imagePath = null;
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
+                {
+                    var result = await _imageService.SaveImageAsync(
+                        model.ImageFile,
+                        "images/tours",
+                        "tour",
+                        null,
+                        new Size(800, 600)
+                    );
+
+                    if (!result.IsSuccess)
+                    {
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage ?? "Error saving image.");
+                        goto ReturnView;
+                    }
+                    imagePath = $"/images/tours/{Path.GetFileName(result.FilePath)}";
+                }
+                else
+                {
+                    ModelState.AddModelError("ImageFile", "Vui lòng upload ảnh cho tour.");
+                    goto ReturnView;
+                }
+
                 var newTour = new Tour
                 {
                     TourName = model.TourName,
                     Description = model.Description,
                     Price = model.Price,
-                    Duration = model.Duration,
+                    Duration = model.Duration, // Được tính tự động
                     StartDate = model.StartDate,
                     EndDate = model.EndDate,
                     AvailableSeats = model.AvailableSeats,
                     TourType = model.TourType,
                     TourStatus = model.TourStatus,
                     DestinationId = model.DestinationId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    ImageUrl = imagePath
                 };
 
                 await _unitOfWork.Tours.AddAsync(newTour);
@@ -122,27 +182,20 @@ public class TourController : Controller
                 return RedirectToAction("ManageTours", "Admin");
             }
 
-            // Nếu có lỗi validation, load lại danh sách điểm đến
+        ReturnView:
             model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DestinationId.ToString(),
-                    Text = d.Name
-                }).ToList();
+                .Select(d => new SelectListItem { Value = d.DestinationId.ToString(), Text = d.Name }).ToList();
             return View(model);
         }
         catch (Exception ex)
         {
             ModelState.AddModelError("", "Error creating tour: " + ex.Message);
             model.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DestinationId.ToString(),
-                    Text = d.Name
-                }).ToList();
+                .Select(d => new SelectListItem { Value = d.DestinationId.ToString(), Text = d.Name }).ToList();
             return View(model);
         }
     }
+
 
     [HttpGet]
     public async Task<IActionResult> GetTourDetails(int id)
@@ -158,119 +211,245 @@ public class TourController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetEditTourForm(int id)
+    public async Task<IActionResult> Edit(int id)
     {
         var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-        if (tour == null) return NotFound();
-
-        // Load danh sách điểm đến cho dropdown
-        ViewBag.Destinations = await _unitOfWork.Destinations.GetAllAsync();
-
-        return PartialView("_EditTourPartial", tour);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> EditTour(
-        int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
-        DateTime StartDate, DateTime EndDate,
-        int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
-    {
-        try
+        if (tour == null)
         {
-            var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
-            if (existingTour == null)
-            {
-                return NotFound();
-            }
-
-            // Cập nhật thông tin tour
-            existingTour.TourName = TourName;
-            existingTour.DestinationId = DestinationId;
-            existingTour.Description = Description;
-            existingTour.Price = Price;
-            existingTour.Duration = Duration;
-            existingTour.StartDate = StartDate;
-            existingTour.EndDate = EndDate;
-            existingTour.AvailableSeats = AvailableSeats;
-            existingTour.TourType = TourType;
-            existingTour.TourStatus = TourStatus;
-
-            // Xử lý hình ảnh (nếu có)
-            if (ImageFile != null && ImageFile.Length > 0)
-            {
-                var tourId = existingTour.TourId;
-
-                var uniqueFileName = $"tour-{tourId}";
-                // Gọi ImageService để lưu ảnh
-                var result = await _imageService.SaveImageAsync(
-                    ImageFile,
-                    "images/tours",
-                    filePrefix: uniqueFileName,
-                    oldFilePath: existingTour.ImageUrl,
-                    targetSize: new Size(800, 600)
-                );
-
-                if (result.IsSuccess)
-                {
-                    existingTour.ImageUrl = result.FilePath;
-                }
-                else
-                {
-                    ModelState.AddModelError("", result.ErrorMessage);
-                    return View();
-                }
-            }
-
-            // Cập nhật dữ liệu tour
-            await _unitOfWork.Tours.UpdateAsync(existingTour);
-            await _unitOfWork.SaveChangesAsync();
-
-            return Json(new { redirect = Url.Action("ManageTours", "Admin") });
+            return NotFound();
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Lỗi khi cập nhật tour: " + ex.Message);
-        }
+
+        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+            .Select(d => new SelectListItem
+            {
+                Value = d.DestinationId.ToString(),
+                Text = $"{d.Name} - {d.City}, {d.Country}"
+            }).ToList();
+
+        return View("EditTours", tour); // Chỉ định rõ view là EditTours.cshtml
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteTour(int id)
+    public async Task<IActionResult> Edit(int id, Tour model, IFormFile ImageFile)
     {
+        Console.WriteLine($"TourId: {model.TourId}, TourName: {model.TourName}, ImageFile: {(ImageFile != null ? ImageFile.FileName : "null")}");
         try
         {
-            // Kiểm tra xem tour có tồn tại không
-            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-            if (tour == null)
+            if (id != model.TourId)
             {
-                return Json(new { success = false, message = "Tour không tồn tại." });
+                return NotFound();
             }
 
-            // Xóa các booking liên quan (nếu có)
-            var bookings = await _unitOfWork.Bookings.GetAllAsync();
-            var relatedBookings = bookings.Where(b => b.TourId == id).ToList();
-            foreach (var booking in relatedBookings)
+            // Ràng buộc ngày đi >= ngày hiện tại
+            if (model.StartDate < DateTime.Today)
             {
-                await _unitOfWork.Bookings.DeleteAsync(booking.BookingId);
+                ModelState.AddModelError("StartDate", "Ngày đi phải lớn hơn hoặc bằng ngày hiện tại.");
             }
 
-            // Xóa các đánh giá liên quan (nếu có)
-            var reviews = await _unitOfWork.Reviews.GetAllAsync();
-            var relatedReviews = reviews.Where(r => r.TourId == id).ToList();
-            foreach (var review in relatedReviews)
+            // Ràng buộc ngày đi < ngày về
+            if (model.StartDate >= model.EndDate)
             {
-                await _unitOfWork.Reviews.DeleteAsync(review.ReviewId);
+                ModelState.AddModelError("EndDate", "Ngày về phải sau ngày đi.");
             }
 
-            // Xóa tour
-            await _unitOfWork.Tours.DeleteAsync(id);
-            await _unitOfWork.SaveChangesAsync();
+            // Tính thời gian tour tự động
+            var dayDiff = (model.EndDate - model.StartDate).Days + 1;
+            model.Duration = dayDiff; // Gán giá trị tự động
 
-            return Json(new { success = true, message = "Xóa tour thành công!", redirect = Url.Action("ManageTours", "Admin") });
+            // Ràng buộc thời gian tour <= 30 ngày
+            if (dayDiff > 30)
+            {
+                ModelState.AddModelError("EndDate", "Tour không được vượt quá 30 ngày.");
+            }
+
+            // Ràng buộc số chỗ không âm
+            if (model.AvailableSeats < 0)
+            {
+                ModelState.AddModelError("AvailableSeats", "Số chỗ không được nhỏ hơn 0.");
+            }
+
+            // Ràng buộc các trường không được để trống
+            if (string.IsNullOrEmpty(model.TourName))
+            {
+                ModelState.AddModelError("TourName", "Tên tour không được để trống.");
+            }
+            if (model.Price <= 0)
+            {
+                ModelState.AddModelError("Price", "Giá tour phải lớn hơn 0.");
+            }
+            if (model.StartDate == default(DateTime))
+            {
+                ModelState.AddModelError("StartDate", "Ngày đi không được để trống.");
+            }
+            if (model.EndDate == default(DateTime))
+            {
+                ModelState.AddModelError("EndDate", "Ngày về không được để trống.");
+            }
+            if (model.AvailableSeats == null)
+            {
+                ModelState.AddModelError("AvailableSeats", "Số chỗ không được để trống.");
+            }
+
+            // Xóa validation tự động cho ImageFile (nếu có)
+            ModelState.Remove("ImageFile");
+
+            if (ModelState.IsValid)
+            {
+                var existingTour = await _unitOfWork.Tours.GetByIdAsync(id);
+                if (existingTour == null)
+                {
+                    return NotFound();
+                }
+
+                // Cập nhật thông tin tour
+                existingTour.TourName = model.TourName;
+                existingTour.DestinationId = model.DestinationId;
+                existingTour.Description = model.Description;
+                existingTour.Price = model.Price;
+                existingTour.Duration = model.Duration; // Được tính tự động
+                existingTour.StartDate = model.StartDate;
+                existingTour.EndDate = model.EndDate;
+                existingTour.AvailableSeats = model.AvailableSeats;
+                existingTour.TourType = model.TourType;
+                existingTour.TourStatus = model.TourStatus;
+
+                // Xử lý upload hình ảnh mới (chỉ nếu có ảnh mới)
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var uniqueFileName = $"tour-{id}-{Guid.NewGuid().ToString()[..8]}";
+                    if (ImageFile.Length > 5 * 1024 * 1024)
+                    {
+                        ModelState.AddModelError("ImageFile", "Kích thước ảnh không được vượt quá 5MB");
+                        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                            .Select(d => new SelectListItem
+                            {
+                                Value = d.DestinationId.ToString(),
+                                Text = $"{d.Name} - {d.City}, {d.Country}"
+                            }).ToList();
+                        return View("EditTours", model);
+                    }
+
+                    var result = await _imageService.SaveImageAsync(
+                        ImageFile,
+                        "images/tours",
+                        filePrefix: uniqueFileName,
+                        oldFilePath: existingTour.ImageUrl, // Xóa ảnh cũ nếu có
+                        targetSize: new Size(800, 600)
+                    );
+
+                    if (!result.IsSuccess)
+                    {
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage ?? "Unknown error occurred while saving the image.");
+                        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                            .Select(d => new SelectListItem
+                            {
+                                Value = d.DestinationId.ToString(),
+                                Text = $"{d.Name} - {d.City}, {d.Country}"
+                            }).ToList();
+                        return View("EditTours", model);
+                    }
+
+                    // Chỉ ghi đè ImageUrl nếu lưu ảnh thành công
+                    existingTour.ImageUrl = $"/images/tours/{Path.GetFileName(result.FilePath)}";
+                }
+                // Nếu không có ảnh mới, ImageUrl giữ nguyên giá trị cũ
+
+                await _unitOfWork.Tours.UpdateAsync(existingTour);
+                await _unitOfWork.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Cập nhật tour thành công!";
+                return RedirectToAction("ManageTours", "Admin");
+            }
+
+            // Nếu ModelState không hợp lệ, trả về view EditTours với thông tin lỗi
+            ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                .Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = $"{d.Name} - {d.City}, {d.Country}"
+                }).ToList();
+
+            return View("EditTours", model);
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
+            ModelState.AddModelError("", $"Lỗi khi cập nhật tour: {ex.Message}");
+            ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                .Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = $"{d.Name} - {d.City}, {d.Country}"
+                }).ToList();
+            return View("EditTours", model);
+        }
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(int id)
+    {
+        var tour = await _context.Tours
+            .Include(t => t.Destination)
+            .FirstOrDefaultAsync(t => t.TourId == id);
+
+        if (tour == null)
+        {
+            return NotFound();
+        }
+
+        return View(tour);
+    }
+
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Book()
+    {
+        var tours = await _context.Tours
+            .Include(t => t.Destination)
+            .Where(t => t.TourStatus == "Upcoming" && t.AvailableSeats > 0)
+            .ToListAsync();
+
+        return View(tours);
+    }
+
+    // GET: Tour/Delete/5
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+        if (tour == null)
+        {
+            return NotFound();
+        }
+
+        tour.Destination = await _unitOfWork.Destinations.GetByIdAsync(tour.DestinationId);
+        return View(tour);
+    }
+
+    // POST: Tour/Delete/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [ActionName("Delete")] // Đảm bảo tên action khớp với form
+    public async Task<IActionResult> DeleteConfirmed(int id) // Đổi tên để tránh xung đột
+    {
+        try
+        {
+            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
+            if (tour == null)
+            {
+                return NotFound();
+            }
+
+            await _unitOfWork.Tours.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Tour đã được xóa thành công!";
+            return RedirectToAction("ManageTours", "Admin");
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Lỗi khi xóa tour: {ex.Message}";
+            return RedirectToAction("ManageTours", "Admin");
         }
     }
 }

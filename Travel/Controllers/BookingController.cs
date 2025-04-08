@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Travel.Data;
@@ -46,7 +47,7 @@ namespace Travel.Controllers
             // Lấy danh sách voucher có sẵn
             var availableVouchers = await _context.Vouchers
                 .Where(v => v.ExpiryDate >= DateTime.UtcNow && v.IsActive)
-                .Where(v => !v.UsageLimit.HasValue || !v.UsageCount.HasValue || v.UsageCount < v.UsageLimit)
+                .Where(v => !v.UsageLimit.HasValue || v.UsageCount < v.UsageLimit)
                 .ToListAsync();
 
             var model = new BookingViewModel
@@ -88,7 +89,7 @@ namespace Travel.Controllers
                     if (voucher != null && voucher.ExpiryDate >= DateTime.UtcNow && voucher.IsActive)
                     {
                         // Kiểm tra UsageLimit
-                        if (voucher.UsageLimit.HasValue && voucher.UsageCount.HasValue && voucher.UsageCount >= voucher.UsageLimit)
+                        if (voucher.UsageLimit.HasValue && voucher.UsageCount >= voucher.UsageLimit)
                         {
                             ModelState.AddModelError("", "Voucher đã hết lượt sử dụng.");
                         }
@@ -162,11 +163,12 @@ namespace Travel.Controllers
             // Nếu ModelState không hợp lệ, tải lại danh sách voucher
             model.AvailableVouchers = await _context.Vouchers
                 .Where(v => v.ExpiryDate >= DateTime.UtcNow && v.IsActive)
-                .Where(v => !v.UsageLimit.HasValue || !v.UsageCount.HasValue || v.UsageCount < v.UsageLimit)
+                .Where(v => !v.UsageLimit.HasValue || v.UsageCount < v.UsageLimit)
                 .ToListAsync();
 
             return View(model);
         }
+
 
         // GET: /Booking/Details/1
         public async Task<IActionResult> Details(int id)
@@ -249,6 +251,137 @@ namespace Travel.Controllers
                 .ThenInclude(t => t.Destination)
                 .Include(b => b.Voucher)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            return View(booking);
+        }
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var booking = await _context.Bookings
+                .Include(b => b.Tour)
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(m => m.BookingId == id);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Tours = new SelectList(await _context.Tours.ToListAsync(), "TourId", "TourName", booking.TourId);
+            ViewBag.StatusList = new SelectList(new[] { "Pending", "Confirmed", "Cancelled", "Completed" }, booking.Status);
+            ViewBag.PaymentStatusList = new SelectList(new[] { "Pending", "Paid", "Refunded" }, booking.PaymentStatus);
+
+            return View(booking);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("BookingId,UserId,TourId,NumberOfAdults,NumberOfChildren,BookingDate,Status,PaymentStatus,VoucherID,StartDate,DiscountAmountApplied,DiscountPercentageApplied")] Booking booking, string searchQuery, string statusFilter)
+        {
+            if (id != booking.BookingId)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                // Lấy thông tin booking hiện tại từ cơ sở dữ liệu
+                var existingBooking = await _context.Bookings
+                    .Include(b => b.Tour)
+                    .FirstOrDefaultAsync(b => b.BookingId == id);
+
+                if (existingBooking == null)
+                {
+                    return NotFound();
+                }
+
+                // Cập nhật các trường có thể chỉnh sửa
+                existingBooking.Status = booking.Status;
+                existingBooking.PaymentStatus = booking.PaymentStatus;
+                existingBooking.StartDate = booking.StartDate;
+                existingBooking.DiscountAmountApplied = booking.DiscountAmountApplied;
+                existingBooking.DiscountPercentageApplied = booking.DiscountPercentageApplied;
+
+                // Tính toán lại TotalPrice
+                if (existingBooking.Tour != null)
+                {
+                    decimal basePrice = existingBooking.Tour.Price * (existingBooking.NumberOfAdults + existingBooking.NumberOfChildren);
+                    decimal discountAmount = booking.DiscountAmountApplied ?? 0;
+                    decimal discountPercentage = booking.DiscountPercentageApplied ?? 0;
+                    decimal discountFromPercentage = basePrice * (discountPercentage / 100);
+                    existingBooking.TotalPrice = basePrice - discountAmount - discountFromPercentage;
+                }
+
+                // Cập nhật booking trong database
+                _context.Update(existingBooking);
+                await _context.SaveChangesAsync();
+
+                // Sau khi lưu thành công, chuyển hướng về ManageBookings
+                return RedirectToAction("ManageBookings", "Admin", new { searchQuery = searchQuery, statusFilter = statusFilter });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookingExists(booking.BookingId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Lỗi khi lưu thay đổi: {ex.Message}");
+            }
+
+            // Nếu model không hợp lệ, truyền lại ViewBag và quay lại trang Edit
+            ViewBag.Tours = new SelectList(await _context.Tours.ToListAsync(), "TourId", "TourName", booking.TourId);
+            ViewBag.StatusList = new SelectList(new[] { "Pending", "Confirmed", "Cancelled", "Completed" }, booking.Status);
+            ViewBag.PaymentStatusList = new SelectList(new[] { "Pending", "Paid", "Refunded" }, booking.PaymentStatus);
+
+            // Trả lại view với model lỗi
+            return View(booking);
+        }
+
+        private bool BookingExists(int id)
+        {
+            return _context.Bookings.Any(e => e.BookingId == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking != null)
+            {
+                _context.Bookings.Remove(booking);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ManageBookings", "Admin");
+        }
+
+        public async Task<IActionResult> BookingDetails(int id)
+        {
+            // Lấy thông tin Booking theo BookingId
+            var booking = await _context.Bookings
+                .Include(b => b.User) // Lấy thông tin User
+                .Include(b => b.Tour) // Lấy thông tin Tour
+                .Include(b => b.Voucher) // Lấy thông tin Voucher
+                .Include(b => b.BookingLogs) // Lấy lịch sử thay đổi trạng thái
+                .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null)
             {

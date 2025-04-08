@@ -943,7 +943,7 @@ namespace Travel.Controllers
             return View(reviews);
         }
 
-/*================================ Quản lý Voucher =========================================================*/
+        /*================================ Quản lý Voucher =========================================================*/
         public async Task<IActionResult> ManageVouchers()
         {
             var vouchers = await _unitOfWork.Vouchers.GetAllAsync();
@@ -969,12 +969,18 @@ namespace Travel.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateVoucher([Bind("VoucherId,Code,Description,DiscountAmount,DiscountPercentage,MinimumBookingValue,MaxDiscountAmount,ExpiryDate,UsageLimit,UsageCount,IsActive")] Voucher voucher)
         {
+            if (voucher.ExpiryDate < DateTime.Today)
+            {
+                ModelState.AddModelError("ExpiryDate", "Ngày hết hạn không được nhỏ hơn ngày hiện tại.");
+            }
+
             if (ModelState.IsValid)
             {
                 await _unitOfWork.Vouchers.AddAsync(voucher);
                 await _unitOfWork.SaveChangesAsync();
                 return RedirectToAction(nameof(ManageVouchers));
             }
+
             return View(voucher);
         }
 
@@ -1017,29 +1023,34 @@ namespace Travel.Controllers
             return View(voucher);
         }
 
-        public async Task<IActionResult> DeleteVoucher(int id)
-        {
-            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
-            if (voucher == null)
-            {
-                return NotFound();
-            }
-            return View(voucher);
-        }
-
-        [HttpPost, ActionName("DeleteVoucher")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVoucherConfirmed(int id)
         {
             var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
-            if (voucher != null)
-            {
-                await _unitOfWork.Vouchers.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
-            }
-            return RedirectToAction(nameof(ManageVouchers));
+            if (voucher == null) return NotFound();
+
+            voucher.IsActive = false;
+            _unitOfWork.Vouchers.UpdateAsync(voucher);
+            await _unitOfWork.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Voucher đã được vô hiệu hóa.";
+            return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReactivateVoucher(int id)
+        {
+            var voucher = await _unitOfWork.Vouchers.GetByIdAsync(id);
+            if (voucher == null) return NotFound();
+
+            voucher.IsActive = true;
+            _unitOfWork.Vouchers.UpdateAsync(voucher);
+            await _unitOfWork.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Voucher đã được kích hoạt lại.";
+            return RedirectToAction(nameof(Index));
         public async Task<IActionResult> ManageForumCategories()
         {
             var categories = await _context.ForumCategories.ToListAsync();
@@ -1054,6 +1065,18 @@ namespace Travel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public IActionResult ToggleVoucherStatus(int id, bool activate)
+        {
+            var voucher = _context.Vouchers.FirstOrDefault(v => v.VoucherId == id);
+            if (voucher == null)
+                return NotFound();
+
+            voucher.IsActive = activate;
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = $"Voucher {voucher.Code} đã {(activate ? "được kích hoạt lại" : "bị vô hiệu hóa")} thành công.";
+            return RedirectToAction("ManageVouchers");
+        }
         public async Task<IActionResult> CreateForumCategory(ForumCategory category)
         {
             if (ModelState.IsValid)

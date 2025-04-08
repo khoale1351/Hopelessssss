@@ -305,4 +305,15 @@ public class TourController : Controller
 
         return View(tour);
     }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Book()
+    {
+        var tours = await _context.Tours
+            .Include(t => t.Destination)
+            .Where(t => t.TourStatus == "Upcoming" && t.AvailableSeats > 0)
+            .ToListAsync();
+
+        return View(tours);
+    }
 }

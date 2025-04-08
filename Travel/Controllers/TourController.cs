@@ -84,6 +84,20 @@ public class TourController : Controller
     {
         try
         {
+            if (model.StartDate <= DateTime.Today)
+            {
+                ModelState.AddModelError("StartDate", "Ngày bắt đầu phải lớn hơn ngày hiện tại.");
+            }
+
+            if (model.StartDate >= model.EndDate)
+            {
+                ModelState.AddModelError("StartDate", "Ngày bắt đầu phải trước ngày kết thúc.");
+            }
+
+            if ((model.EndDate - model.StartDate).TotalDays > 30)
+            {
+                ModelState.AddModelError("EndDate", "Thời gian kết thúc không được cách ngày bắt đầu quá 30 ngày.");
+            }
             if (ModelState.IsValid)
             {
                 var newTour = new Tour

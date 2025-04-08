@@ -115,6 +115,7 @@
                         <div class="col-md-6">
                             <label class="form-label" for="TourName">Tên Tour</label>
                             <input type="text" class="form-control" id="TourName" name="TourName" required>
+                            <span asp-validation-for="TourName" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="destinationDropdown">Điểm đến</label>
@@ -147,10 +148,12 @@
                         <div class="col-md-6">
                             <label class="form-label" for="StartDate">Ngày bắt đầu</label>
                             <input type="date" class="form-control" id="StartDate" name="StartDate" required>
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="EndDate">Ngày kết thúc</label>
                             <input type="date" class="form-control" id="EndDate" name="EndDate" required>
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="row mb-3">

@@ -67,11 +67,11 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="DestinationId"></label>
-        <select asp-for="DestinationId" asp-items="@(new SelectList(Model.DestinationOptions, "DestinationId", "Name"))" class="form-control">
-            <option value="">-- Select Destination --</option>
-        </select>
+        <label>Destination</label>
+        <input type="text" id="destinationSearch" class="form-control" placeholder="Search destinations..." />
+        <input type="hidden" asp-for="DestinationId" id="selectedDestinationId" />
         <span asp-validation-for="DestinationId" class="text-danger"></span>
+        <div id="destinationResults" class="list-group mt-2" style="display:none; position: absolute; z-index: 1000; width: 100%;"></div>
     </div>
 
     <div class="form-group">
@@ -79,3 +79,59 @@
         <a asp-action="Index" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#destinationSearch').on('input', function() {
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length >= 2) {
+                    $.getJSON('/Tour/SearchDestinations', { searchTerm: searchTerm })
+                        .done(function(data) {
+                            const resultsContainer = $('#destinationResults');
+                            resultsContainer.empty();
+
+                            if (data && data.length > 0) {
+                                data.forEach(function(destination) {
+                                    const displayText = `${destination.name} - ${destination.city}, ${destination.country}`;
+                                    resultsContainer.append(
+                                        `<a class="dropdown-item" href="#"
+                                           data-id="${destination.destinationId}"
+                                           data-name="${displayText}">
+                                            ${displayText}
+                                        </a>`
+                                    );
+                                });
+                                resultsContainer.show();
+                            } else {
+                                resultsContainer.hide();
+                            }
+                        })
+                        .fail(function(jqXHR, textStatus, errorThrown) {
+                            console.error("Error fetching destinations:", textStatus, errorThrown);
+                        });
+                } else {
+                    $('#destinationResults').hide();
+                }
+            });
+
+            // Xử lý khi chọn một điểm đến
+            $(document).on('click', '#destinationResults .dropdown-item', function(e) {
+                e.preventDefault();
+                const destinationId = $(this).data('id');
+                const destinationName = $(this).data('name');
+
+                $('#destinationSearch').val(destinationName);
+                $('#selectedDestinationId').val(destinationId);
+                $('#destinationResults').hide();
+            });
+
+            // Ẩn dropdown khi click ra ngoài
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#destinationSearch, #destinationResults').length) {
+                    $('#destinationResults').hide();
+                }
+            });
+        });
+    </script>
+}

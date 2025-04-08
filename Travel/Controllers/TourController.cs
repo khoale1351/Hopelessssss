@@ -54,8 +54,7 @@ public class TourController : Controller
                             d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                             (d.City != null && d.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
                             (d.Country != null && d.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-                .Select(d => new
-                {
+                .Select(d => new {
                     destinationId = d.DestinationId,
                     name = d.Name,
                     city = d.City,
@@ -68,7 +67,7 @@ public class TourController : Controller
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Lỗi khi tải điểm đến: " + ex.Message });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -240,7 +239,7 @@ public class TourController : Controller
 
                     if (!result.IsSuccess)
                     {
-                        ModelState.AddModelError("ImageFile", result.ErrorMessage);
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage ?? "Unknown error occurred while saving the image.");
                         ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
                             .Select(d => new SelectListItem
                             {
@@ -283,48 +282,6 @@ public class TourController : Controller
         }
     }
 
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteTour(int id)
-    {
-        try
-        {
-            // Kiểm tra xem tour có tồn tại không
-            var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-            if (tour == null)
-            {
-                return Json(new { success = false, message = "Tour không tồn tại." });
-            }
-
-            // Xóa các booking liên quan (nếu có)
-            var bookings = await _unitOfWork.Bookings.GetAllAsync();
-            var relatedBookings = bookings.Where(b => b.TourId == id).ToList();
-            foreach (var booking in relatedBookings)
-            {
-                await _unitOfWork.Bookings.DeleteAsync(booking.BookingId);
-            }
-
-            // Xóa các đánh giá liên quan (nếu có)
-            var reviews = await _unitOfWork.Reviews.GetAllAsync();
-            var relatedReviews = reviews.Where(r => r.TourId == id).ToList();
-            foreach (var review in relatedReviews)
-            {
-                await _unitOfWork.Reviews.DeleteAsync(review.ReviewId);
-            }
-
-            // Xóa tour
-            await _unitOfWork.Tours.DeleteAsync(id);
-            await _unitOfWork.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Xóa tour thành công!", redirect = Url.Action("ManageTours", "Admin") });
-        }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = "Lỗi khi xóa tour: " + ex.Message });
-        }
-    }
-
     [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
@@ -339,6 +296,7 @@ public class TourController : Controller
 
         return View(tour);
     }
+
 
     [AllowAnonymous]
     public async Task<IActionResult> Book()

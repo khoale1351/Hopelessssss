@@ -219,11 +219,3 @@
 [data-bs-theme="dark"] .nav-item.dropdown .nav-link {
     color: #f8f9fa !important;
 }
-
-[data-bs-theme="dark"] .card-title {
-    color: White;
-}
-
-[data-bs-theme="light"] .card-title {
-    color: Black;
-}

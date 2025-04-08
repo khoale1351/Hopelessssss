@@ -39,3 +39,17 @@ VALUES
 ( 'a8476809-0adb-447c-8985-0be398d9ea19', 3, 1, 0, 300.00, '2025-04-02', 'Pending', 'Pending', 2, '2025-06-10', 50.00, 10.0),
 ( 'a8476809-0adb-447c-8985-0be398d9ea19', 4, 3, 2, 1200.00, '2025-04-03', 'Cancelled', 'Refunded', 1, '2025-07-15', NULL, NULL);
 
+UPDATE Tours
+SET
+    DestinationId = 1,
+    TourName = N'Tour Đà Lạt',
+    Description = N'Khám phá thành phố ngàn hoa với đồi thông bạt ngàn.',
+    Price = 2500000.00,
+    Duration = 3,
+    StartDate = '2025-04-15 08:00:00',
+    EndDate = '2025-04-17 18:00:00',
+    AvailableSeats = 20,
+    ImageUrl = '/images/tours/tour-3-638796588912168444.jpg',
+    TourType = 'Group',
+    TourStatus = 'Upcoming'
+WHERE TourId = 1;  -- cần chỉ rõ bạn muốn update tour nào

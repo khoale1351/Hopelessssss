@@ -10,67 +10,67 @@
         @Html.AntiForgeryToken()
 
         <div class="form-group">
-            <label asp-for="Code" class="control-label"></label>
+            <label asp-for="Code" class="control-label">Mã Voucher</label>
             <input asp-for="Code" class="form-control" />
             <span asp-validation-for="Code" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Description" class="control-label"></label>
+            <label asp-for="Description" class="control-label">Mô tả</label>
             <textarea asp-for="Description" class="form-control"></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="DiscountAmount" class="control-label"></label>
+            <label asp-for="DiscountAmount" class="control-label">Số tiền giảm giá</label>
             <input asp-for="DiscountAmount" class="form-control" />
             <span asp-validation-for="DiscountAmount" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="DiscountPercentage" class="control-label"></label>
+            <label asp-for="DiscountPercentage" class="control-label">Phần trăm giảm giá</label>
             <input asp-for="DiscountPercentage" class="form-control" />
             <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="MinimumBookingValue" class="control-label"></label>
+            <label asp-for="MinimumBookingValue" class="control-label">Giá trị đặt tour tối thiểu</label>
             <input asp-for="MinimumBookingValue" class="form-control" />
             <span asp-validation-for="MinimumBookingValue" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="MaxDiscountAmount" class="control-label"></label>
+            <label asp-for="MaxDiscountAmount" class="control-label">Số tiền giảm tối đa</label>
             <input asp-for="MaxDiscountAmount" class="form-control" />
             <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="ExpiryDate" class="control-label"></label>
+            <label asp-for="ExpiryDate" class="control-label">Ngày hết hạn</label>
             <input asp-for="ExpiryDate" class="form-control" type="date" />
             <span asp-validation-for="ExpiryDate" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="UsageLimit" class="control-label"></label>
+            <label asp-for="UsageLimit" class="control-label">Giới hạn sử dụng</label>
             <input asp-for="UsageLimit" class="form-control" />
             <span asp-validation-for="UsageLimit" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="UsageCount" class="control-label"></label>
+            <label asp-for="UsageCount" class="control-label">Số lượng sử dụng</label>
             <input asp-for="UsageCount" class="form-control" />
             <span asp-validation-for="UsageCount" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="IsActive" class="control-label"></label>
+            <label asp-for="IsActive" class="control-label">Trạng thái</label>
             <input asp-for="IsActive" class="form-control" type="checkbox" />
             <span asp-validation-for="IsActive" class="text-danger"></span>
         </div>
 
         <div class="form-group text-center">
-            <button type="submit" class="btn btn-primary">Save Voucher</button>
+            <button type="submit" class="btn btn-primary">Tạo Voucher</button>
         </div>
     </form>
 </div>

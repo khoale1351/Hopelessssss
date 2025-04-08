@@ -144,108 +144,142 @@ public class TourController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetEditTourForm(int id)
+    public async Task<IActionResult> Edit(int id)
     {
         var tour = await _unitOfWork.Tours.GetByIdAsync(id);
-        if (tour == null) return NotFound();
+        if (tour == null)
+        {
+            return NotFound();
+        }
 
-        // Load danh sách điểm đến cho dropdown
-        ViewBag.Destinations = await _unitOfWork.Destinations.GetAllAsync();
+        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+            .Select(d => new SelectListItem
+            {
+                Value = d.DestinationId.ToString(),
+                Text = $"{d.Name} - {d.City}, {d.Country}"
+            }).ToList();
 
-        return PartialView("_EditTourPartial", tour);
+        return View("EditTours", tour); // Chỉ định rõ view là EditTours.cshtml
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditTour(
-        int TourId, string TourName, int DestinationId, string Description, decimal Price, int Duration,
-        DateTime StartDate, DateTime EndDate, int AvailableSeats, string TourType, string TourStatus, IFormFile ImageFile)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, Tour model, IFormFile ImageFile)
     {
+        Console.WriteLine($"TourId: {model.TourId}, TourName: {model.TourName}, ImageFile: {(ImageFile != null ? ImageFile.FileName : "null")}");
         try
         {
-            // Log để kiểm tra giá trị nhận được
-            Console.WriteLine($"TourId: {TourId}, StartDate: {StartDate}, EndDate: {EndDate}, Duration: {Duration}");
-
-            // Kiểm tra ràng buộc
-            if (StartDate >= EndDate)
-            {
-                return Json(new { success = false, message = "Ngày về phải sau ngày đi." });
-            }
-
-            var dayDiff = (EndDate - StartDate).Days + 1;
-            Console.WriteLine($"Calculated dayDiff: {dayDiff}");
-
-            if (dayDiff > 30)
-            {
-                return Json(new { success = false, message = "Tour không được vượt quá 30 ngày." });
-            }
-            if (dayDiff != Duration)
-            {
-                return Json(new { success = false, message = $"Thời gian tour không khớp với ngày đi và ngày về. Dự kiến: {dayDiff}, Nhận được: {Duration}" });
-            }
-            if (AvailableSeats < 0)
-            {
-                return Json(new { success = false, message = "Số chỗ không được nhỏ hơn 0." });
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            var existingTour = await _unitOfWork.Tours.GetByIdAsync(TourId);
-            if (existingTour == null)
+            if (id != model.TourId)
             {
                 return NotFound();
             }
 
-            // Cập nhật thông tin
-            existingTour.TourName = TourName;
-            existingTour.DestinationId = DestinationId;
-            existingTour.Description = Description;
-            existingTour.Price = Price;
-            existingTour.Duration = Duration;
-            existingTour.StartDate = StartDate;
-            existingTour.EndDate = EndDate;
-            existingTour.AvailableSeats = AvailableSeats;
-            existingTour.TourType = TourType;
-            existingTour.TourStatus = TourStatus;
-
-            // Xử lý hình ảnh
-            if (ImageFile != null && ImageFile.Length > 0)
+            // Kiểm tra ràng buộc phía server
+            if (model.StartDate >= model.EndDate)
             {
-                var uniqueFileName = $"tour-{TourId}-{Guid.NewGuid().ToString()[..8]}";
-                if (ImageFile.Length > 5 * 1024 * 1024) // 5MB
-                {
-                    return StatusCode(400, "Kích thước ảnh không được vượt quá 5MB");
-                }
-
-                var result = await _imageService.SaveImageAsync(
-                    ImageFile,
-                    "images/tours",
-                    filePrefix: uniqueFileName,
-                    oldFilePath: existingTour.ImageUrl,
-                    targetSize: new Size(800, 600)
-                );
-
-                if (!result.IsSuccess)
-                {
-                    return StatusCode(500, result.ErrorMessage);
-                }
-
-                existingTour.ImageUrl = result.FilePath;
+                ModelState.AddModelError("EndDate", "Ngày về phải sau ngày đi.");
             }
 
-            await _unitOfWork.Tours.UpdateAsync(existingTour);
-            await _unitOfWork.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            return Json(new
+            var dayDiff = (model.EndDate - model.StartDate).Days + 1;
+            if (dayDiff > 30)
             {
-                success = true,
-                message = "Cập nhật tour thành công!",
-                redirect = Url.Action("ManageTours", "Admin")
-            });
+                ModelState.AddModelError("EndDate", "Tour không được vượt quá 30 ngày.");
+            }
+
+            if (dayDiff != model.Duration)
+            {
+                ModelState.AddModelError("Duration", $"Thời gian tour không khớp với ngày đi và ngày về. Dự kiến: {dayDiff} ngày");
+            }
+
+            if (model.AvailableSeats < 0)
+            {
+                ModelState.AddModelError("AvailableSeats", "Số chỗ không được nhỏ hơn 0.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                var existingTour = await _unitOfWork.Tours.GetByIdAsync(id);
+                if (existingTour == null)
+                {
+                    return NotFound();
+                }
+
+                existingTour.TourName = model.TourName;
+                existingTour.DestinationId = model.DestinationId;
+                existingTour.Description = model.Description;
+                existingTour.Price = model.Price;
+                existingTour.Duration = model.Duration;
+                existingTour.StartDate = model.StartDate;
+                existingTour.EndDate = model.EndDate;
+                existingTour.AvailableSeats = model.AvailableSeats;
+                existingTour.TourType = model.TourType;
+                existingTour.TourStatus = model.TourStatus;
+
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var uniqueFileName = $"tour-{id}-{Guid.NewGuid().ToString()[..8]}";
+                    if (ImageFile.Length > 5 * 1024 * 1024)
+                    {
+                        ModelState.AddModelError("ImageFile", "Kích thước ảnh không được vượt quá 5MB");
+                        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                            .Select(d => new SelectListItem
+                            {
+                                Value = d.DestinationId.ToString(),
+                                Text = $"{d.Name} - {d.City}, {d.Country}"
+                            }).ToList();
+                        return View("EditTours", model);
+                    }
+
+                    var result = await _imageService.SaveImageAsync(
+                        ImageFile,
+                        "images/tours",
+                        filePrefix: uniqueFileName,
+                        oldFilePath: existingTour.ImageUrl,
+                        targetSize: new Size(800, 600)
+                    );
+
+                    if (!result.IsSuccess)
+                    {
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage);
+                        ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                            .Select(d => new SelectListItem
+                            {
+                                Value = d.DestinationId.ToString(),
+                                Text = $"{d.Name} - {d.City}, {d.Country}"
+                            }).ToList();
+                        return View("EditTours", model);
+                    }
+
+                    existingTour.ImageUrl = result.FilePath;
+                }
+
+                await _unitOfWork.Tours.UpdateAsync(existingTour);
+                await _unitOfWork.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Cập nhật tour thành công!";
+                return RedirectToAction("ManageTours", "Admin");
+            }
+
+            // Nếu ModelState không hợp lệ, trả về view EditTours với thông tin lỗi
+            ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                .Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = $"{d.Name} - {d.City}, {d.Country}"
+                }).ToList();
+
+            return View("EditTours", model);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Lỗi không xác định: {ex.Message}");
+            ModelState.AddModelError("", $"Lỗi khi cập nhật tour: {ex.Message}");
+            ViewBag.DestinationOptions = (await _unitOfWork.Destinations.GetAllAsync())
+                .Select(d => new SelectListItem
+                {
+                    Value = d.DestinationId.ToString(),
+                    Text = $"{d.Name} - {d.City}, {d.Country}"
+                }).ToList();
+            return View("EditTours", model);
         }
     }
 

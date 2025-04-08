@@ -82,10 +82,10 @@
 												data-bs-target="#detailTourModal" data-id="@item.TourId">
 											<i class="fas fa-eye"></i>
 										</button>
-										<button class="btn btn-warning me-1" title="Chỉnh sửa" data-bs-toggle="modal"
-												data-bs-target="#editTourModal" data-id="@item.TourId">
+										<a href="@Url.Action("Edit", "Tour", new { id = item.TourId })"
+										   class="btn btn-warning me-1" title="Chỉnh sửa">
 											<i class="fas fa-edit"></i>
-										</button>
+										</a>
 										<button class="btn btn-danger delete-btn" title="Xóa"
 												data-id="@item.TourId" data-name="@item.TourName">
 											<i class="fas fa-trash-alt"></i>
@@ -199,27 +199,6 @@
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
 			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Modal Sửa Tour -->
-<div class="modal fade" id="editTourModal" tabindex="-1" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-			<div class="modal-header bg-warning text-white">
-				<h5 class="modal-title">Chỉnh sửa Tour</h5>
-				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<form id="editTourForm" method="post" enctype="multipart/form-data" onsubmit="return validateTourForm()">
-				<div class="modal-body" id="editTourContent">
-					<!-- Nội dung sẽ được load bằng AJAX -->
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-					<button type="submit" class="btn btn-warning text-white">Cập nhật</button>
-				</div>
-			</form>
 		</div>
 	</div>
 </div>

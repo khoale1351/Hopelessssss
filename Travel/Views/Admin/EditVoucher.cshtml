@@ -1,0 +1,84 @@
+﻿@model Travel.Models.Voucher
+
+@{
+    ViewData["Title"] = "Edit Voucher";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">Chỉnh sửa Voucher</h1>
+
+    <form asp-action="EditVoucher" method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="VoucherId" />
+
+        <div class="col-md-6">
+            <label asp-for="Code" class="form-label"></label>
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Description" class="form-label"></label>
+            <input asp-for="Description" class="form-control" />
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="DiscountAmount" class="form-label"></label>
+            <input asp-for="DiscountAmount" class="form-control" />
+            <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="DiscountPercentage" class="form-label"></label>
+            <input asp-for="DiscountPercentage" class="form-control" />
+            <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MinimumBookingValue" class="form-label"></label>
+            <input asp-for="MinimumBookingValue" class="form-control" />
+            <span asp-validation-for="MinimumBookingValue" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MaxDiscountAmount" class="form-label"></label>
+            <input asp-for="MaxDiscountAmount" class="form-control" />
+            <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="ExpiryDate" class="form-label"></label>
+            <input asp-for="ExpiryDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="UsageLimit" class="form-label"></label>
+            <input asp-for="UsageLimit" class="form-control" />
+            <span asp-validation-for="UsageLimit" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="UsageCount" class="form-label"></label>
+            <input asp-for="UsageCount" class="form-control" />
+            <span asp-validation-for="UsageCount" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check mt-4">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-success px-4">Lưu thay đổi</button>
+            <a asp-action="ManageVouchers" class="btn btn-secondary ms-2">Quay lại</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

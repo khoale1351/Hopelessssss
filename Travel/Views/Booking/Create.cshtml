@@ -39,14 +39,14 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="NumberOfAdults" class="form-label"></label>
-                            <input asp-for="NumberOfAdults" class="form-control" min="0" type="number" />
+                            <label asp-for="NumberOfAdults" class="form-label"><strong>Số lượng người lớn:</strong></label>
+                            <input asp-for="NumberOfAdults" class="form-control" type="number" min="0" onchange="calculateTotal()" />
                             <span asp-validation-for="NumberOfAdults" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="NumberOfChildren" class="form-label"></label>
-                            <input asp-for="NumberOfChildren" class="form-control" min="0" type="number" />
+                            <label asp-for="NumberOfChildren" class="form-label"><strong>Số lượng trẻ em:</strong></label>
+                            <input asp-for="NumberOfChildren" class="form-control" type="number" min="0" onchange="calculateTotal()" />
                             <span asp-validation-for="NumberOfChildren" class="text-danger"></span>
                         </div>
 
@@ -66,7 +66,7 @@
 
                         <div class="form-group mb-3">
                             <label class="form-label"><strong>Tổng giá:</strong></label>
-                            <p id="totalPrice"></p>
+                            <p id="totalPrice">@Model.TourPrice.ToString("C")</p>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">Xác Nhận Đặt Tour</button>
@@ -77,4 +77,28 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function calculateTotal() {
+            const tourPrice = @Model.TourPrice;
+            const adults = parseInt(document.getElementById('NumberOfAdults').value) || 0;
+            const children = parseInt(document.getElementById('NumberOfChildren').value) || 0;
+            
+            // Tính tổng giá (người lớn giá đầy đủ, trẻ em 50% giá)
+            const totalPrice = (adults * tourPrice) + (children * tourPrice * 0.5);
+            
+            // Format giá tiền theo định dạng tiền tệ
+            const formattedPrice = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(totalPrice);
+            
+            document.getElementById('totalPrice').textContent = formattedPrice;
+        }
+
+        // Tính tổng giá khi trang được tải
+        document.addEventListener('DOMContentLoaded', calculateTotal);
+    </script>
+}
 

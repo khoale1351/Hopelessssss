@@ -21,10 +21,10 @@ namespace Travel.ViewModels
         public DateTime? DateOfBirth { get; set; }
 
         [StringLength(255, ErrorMessage = "Địa chỉ không được dài quá 255 ký tự.")]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         [RegularExpression(@"^0\d{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ. Phải có 10-11 chữ số và bắt đầu bằng 0.")]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
         public string Role { get; set; }
 

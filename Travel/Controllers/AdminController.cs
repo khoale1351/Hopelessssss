@@ -1051,6 +1051,7 @@ namespace Travel.Controllers
 
             TempData["SuccessMessage"] = "Voucher đã được kích hoạt lại.";
             return RedirectToAction(nameof(Index));
+        }
         public async Task<IActionResult> ManageForumCategories()
         {
             var categories = await _context.ForumCategories.ToListAsync();

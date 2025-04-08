@@ -56,6 +56,11 @@ namespace Travel.Controllers
             }
             else
             {
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Contains("Admin"))
+                {
+                    return RedirectToAction("IndexAdmin", "Admin");
+                }
                 return RedirectToAction("Index", "Home");
             }
         }

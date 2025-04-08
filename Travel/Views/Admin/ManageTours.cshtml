@@ -22,9 +22,9 @@
 				<i class="fas fa-map-marked-alt me-1"></i>
 				Danh sách Tour
 			</div>
-			<button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addTourModal">
+			<a href="@Url.Action("Create", "Tour")" class="btn btn-light">
 				<i class="fas fa-plus me-1"></i> Thêm Tour
-			</button>
+			</a>
 		</div>
 
 		<div class="card-body">
@@ -97,90 +97,6 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Modal Thêm Tour -->
-<div class="modal fade" id="addTourModal" tabindex="-1" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-			<div class="modal-header bg-primary text-white">
-				<h5 class="modal-title">Thêm Tour Mới</h5>
-				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<form asp-action="Create" asp-controller="Tour" method="post" enctype="multipart/form-data">
-				<div class="modal-body">
-					<div class="row mb-3">
-						<div class="col-md-6">
-							<label class="form-label" for="TourName">Tên Tour</label>
-							<input type="text" class="form-control" id="TourName" name="TourName" required>
-						</div>
-						<div class="col-md-6">
-							<label class="form-label" for="destinationDropdown">Điểm đến</label>
-							<select class="form-control select2-destination" name="DestinationId" id="destinationDropdown" required>
-								<option value="" disabled selected>Tìm kiếm điểm đến...</option>
-							</select>
-						</div>
-					</div>
-					<div class="row mb-3">
-						<div class="col-md-12">
-							<label class="form-label" for="Description">Mô tả</label>
-							<textarea class="form-control" id="Description" name="Description" rows="3"></textarea>
-						</div>
-					</div>
-					<div class="row mb-3">
-						<div class="col-md-4">
-							<label class="form-label" for="Price">Giá (VNĐ)</label>
-							<input type="number" class="form-control" id="Price" name="Price" min="0" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label" for="Duration">Thời gian (ngày)</label>
-							<input type="number" class="form-control" id="Duration" name="Duration" min="1" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label" for="AvailableSeats">Số chỗ</label>
-							<input type="number" class="form-control" id="AvailableSeats" name="AvailableSeats" min="0" required>
-						</div>
-					</div>
-					<div class="row mb-3">
-						<div class="col-md-6">
-							<label class="form-label" for="StartDate">Ngày bắt đầu</label>
-							<input type="date" class="form-control" id="StartDate" name="StartDate" required>
-						</div>
-						<div class="col-md-6">
-							<label class="form-label" for="EndDate">Ngày kết thúc</label>
-							<input type="date" class="form-control" id="EndDate" name="EndDate" required>
-						</div>
-					</div>
-					<div class="row mb-3">
-						<div class="col-md-6">
-							<label class="form-label" for="TourType">Loại Tour</label>
-							<select class="form-select" id="TourType" name="TourType" required>
-								<option value="Private">Private</option>
-								<option value="Group">Group</option>
-							</select>
-						</div>
-						<div class="col-md-6">
-							<label class="form-label" for="TourStatus">Trạng thái</label>
-							<select class="form-select" id="TourStatus" name="TourStatus" required>
-								<option value="Upcoming">Sắp diễn ra</option>
-								<option value="Ongoing">Đang diễn ra</option>
-								<option value="Completed">Đã hoàn thành</option>
-								<option value="Cancelled">Đã hủy</option>
-							</select>
-						</div>
-					</div>
-					<div class="mb-3">
-						<label class="form-label" for="ImageFile">Hình ảnh</label>
-						<input class="form-control" type="file" id="ImageFile" name="ImageFile" accept="image/*">
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-					<button type="submit" class="btn btn-primary">Lưu</button>
-				</div>
-			</form>
 		</div>
 	</div>
 </div>

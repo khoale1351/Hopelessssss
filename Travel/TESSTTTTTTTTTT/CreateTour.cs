@@ -1,6 +1,6 @@
 ﻿namespace Travel.TESSTTTTTTTTTT
 {
-    public class ReadTour
+    public class CreateTour
     {
     }
 }

@@ -35,6 +35,18 @@ namespace Travel.Controllers
         // GET: /Booking/Create?tourId=1
         public async Task<IActionResult> Create(int tourId)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Check if user already has a booking for this tour
+            var existingBooking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.UserId == userId && b.TourId == tourId);
+
+            if (existingBooking != null)
+            {
+                TempData["Error"] = "Bạn đã đặt tour này rồi.";
+                return RedirectToAction("Index");
+            }
+
             var tour = await _context.Tours
                 .Include(t => t.Destination)
                 .FirstOrDefaultAsync(t => t.TourId == tourId);
@@ -76,6 +88,17 @@ namespace Travel.Controllers
 
             if (ModelState.IsValid)
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                // Check if user already has a booking for this tour
+                var existingBooking = await _context.Bookings
+                    .FirstOrDefaultAsync(b => b.UserId == userId && b.TourId == model.TourId);
+
+                if (existingBooking != null)
+                {
+                    ModelState.AddModelError("", "Bạn đã đặt tour này rồi.");
+                }
+
                 // Tính tổng số người
                 int totalPeople = model.NumberOfAdults + model.NumberOfChildren;
 
